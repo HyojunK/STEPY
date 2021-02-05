@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="com.bob.stepy.dao.TravelPlanDao">
+	<!-- 여행 일정 등록 -->
+	<insert id="pRegPlan" parameterType="com.bob.stepy.dto.TravelPlanDto">
+		INSERT INTO T
+		VALUES (#{t_plannum},#{t_planname},#{t_id},#{t_spot},#{t_stdate},#{t_bkdate},DEFAULT,DEFAULT,DEFAULT,DEFAULT,DEFAULT,DEFAULT)
+	</insert>
+	<!-- 여행 일정 리스트 가져오기 -->
+	<select id="getPlanList" parameterType="String" resultType="com.bob.stepy.dto.TravelPlanDto">
+		SELECT * FROM T
+		WHERE T_ID=#{id} OR T_MEMBER1=#{id} OR T_MEMBER2=#{id} OR T_MEMBER3=#{id} OR T_MEMBER4=#{id} OR T_MEMBER5=#{id}
+	</select>
+	<!-- 여행 일정 정보 가져오기 -->
+	<select id="getPlan" parameterType="long" resultType="com.bob.stepy.dto.TravelPlanDto">
+		SELECT * FROM T
+		WHERE T_PLANNUM=#{planNum}
+	</select>
+	<!-- 여행 일정 설정하기 -->
+	<insert id="regPlanContents" parameterType="com.bob.stepy.dto.AccompanyPlanDto">
+		INSERT INTO AP (AP_PLANNUM, AP_MID, AP_DAY)
+		VALUES (#{ap_plannum},#{ap_mid},#{ap_day})
+	</insert>
+	<!-- 여행 전체 일수 가져오기 -->
+	<select id="getTravelDays" parameterType="long" resultType="int">
+		SELECT DISTINCT COUNT(AP_DAY) FROM AP
+		WHERE AP_PLANNUM=#{planNum}
+	</select>
+	<!-- 여행 일정 내용 가져오기 -->
+	<select id="getPlanContents" parameterType="long" resultType="com.bob.stepy.dto.AccompanyPlanDto">
+		SELECT * FROM AP
+		WHERE AP_PLANNUM=#{planNum} ORDER BY AP_PLANCNT
+	</select>
+	<!-- 가게 정보 가져오기 -->
+	<select id="getStoreList" resultType="com.bob.stepy.dto.StoreDto">
+		SELECT S_NUM, S_NAME FROM S
+	</select>
+	<!-- 여행 내용 등록 -->
+	<insert id="regAccompanyPlan" parameterType="com.bob.stepy.dto.AccompanyPlanDto">
+		INSERT INTO AP
+		VALUES (#{ap_plannum},#{ap_mid},#{ap_day},#{ap_plancnt}, #{ap_contents})
+	</insert>
+	<!-- 여행 내용 삭제 -->
+	<delete id="delAccompanyPlan" parameterType="HashMap">
+		DELETE FROM AP
+		WHERE AP_PLANNUM=#{planNum} AND AP_DAY=#{day} AND AP_PLANCNT=#{num}
+	</delete>
+	<!-- 여행 내용 수정 -->
+	<update id="pEditAccompanyPlan" parameterType="com.bob.stepy.dto.AccompanyPlanDto">
+		UPDATE AP
+		SET AP_CONTENTS=#{ap_contents}
+		WHERE AP_PLANNUM=#{ap_plannum} AND AP_DAY=#{ap_day} AND AP_PLANCNT=#{ap_plancnt}
+	</update>
+	<!-- 여행 번호 카운트 정렬 -->
+	<update id="reduceNumCnt" parameterType="HashMap">
+		UPDATE AP
+		SET AP_PLANCNT=AP_PLANCNT-1
+		WHERE AP_PLANNUM=#{planNum} AND AP_DAY=#{day} AND AP_PLANCNT>#{num}
+	</update>
+	<!-- 가계부 내용 등록 -->
+	<insert id="regHousehold" parameterType="com.bob.stepy.dto.HouseholdDto" useGeneratedKeys="true" keyProperty="h_changecnt">
+	<selectKey keyProperty="h_changecnt" resultType="long" order="BEFORE">
+		SELECT COUNT(*)+1 FROM H
+		WHERE H_PLANNUM=#{h_plannum} AND H_DAY=#{h_day}
+	</selectKey>
+		INSERT INTO H
+		VALUES (#{h_plannum},#{h_day},#{h_changecnt},#{h_mid},#{h_cost},#{h_category},#{h_contents},#{h_sname},DEFAULT,DEFAULT)
+	</insert>
+	<!-- 가계부 목록 가져오기 -->
+	<select id="getHouseholdList" resultType="com.bob.stepy.dto.HouseholdDto">
+		SELECT * FROM H
+		WHERE H_PLANNUM=#{planNum} ORDER BY H_CNT
+	</select>
+	<!-- 가계부 내용 가져오기 -->
+	<select id="getHouseholdContentes" parameterType="HashMap" resultType="com.bob.stepy.dto.HouseholdDto">
+		SELECT * FROM H
+		WHERE H_PLANNUM=#{planNum} AND H_DAY=#{day} AND H_CNT=#{householdCnt}
+	</select>
+	<!-- 가계부 내용 수정 -->
+	<update id="ModHousehold" parameterType="com.bob.stepy.dto.HouseholdDto" useGeneratedKeys="true" keyProperty="h_changecnt">
+	<selectKey keyProperty="h_changecnt" resultType="long" order="BEFORE">
+		SELECT COUNT(*)+1 FROM H
+		WHERE H_PLANNUM=#{h_plannum} AND H_DAY=#{h_day}
+	</selectKey>
+		UPDATE H
+		SET H_PLANNUM=#{h_plannum},H_DAY=#{h_day},H_CNT=#{h_changecnt},H_MID=#{h_mid},H_COST=#{h_cost},H_CATEGORY=#{h_category},H_CONTENTS=#{h_contents},H_SNAME=#{h_sname},H_CURDAY=DEFAULT,H_CHANGECNT=DEFAULT
+		WHERE H_PLANNUM=#{h_plannum} AND H_DAY=#{h_curday} AND H_CNT=#{h_cnt}
+	</update>
+	<!-- 가계부 내용 카운트 정렬 -->
+	<update id="reduceHouseholdCnt" parameterType="HashMap">
+		UPDATE H
+		SET H_CNT=H_CNT-1
+		WHERE H_PLANNUM=#{planNum} AND H_DAY=#{curDay} AND H_CNT>#{householdCnt}
+	</update>
+	<!-- 가계부 내용 삭제 -->
+	<delete id="delHousehold" parameterType="HashMap">
+		DELETE H
+		WHERE H_PLANNUM=#{planNum} AND H_DAY=#{curDay} AND H_CNT=#{householdCnt}
+	</delete>
+	<!-- 예산 등록 -->
+	<update id="pRegBudget" parameterType="HashMap">
+		UPDATE T
+		SET T_BUDGET=#{budget}
+		WHERE T_PLANNUM=#{planNum}
+	</update>
+	<!-- 예산 조회 -->
+	<select id="getBalance" parameterType="Long" resultType="Long">
+		SELECT H_TOTALCOST
+		FROM B
+		WHERE H_PLANNUM=#{planNum}
+	</select>
+	<!-- 체크리스트 내용 가져오기 -->
+	<select id="getCheckList" parameterType="long" resultType="com.bob.stepy.dto.CheckListDto">
+		SELECT * FROM CL
+		WHERE CL_PLANNUM=#{planNum} ORDER BY CL_CATEGORY,CL_CNT
+	</select>
+	<!-- 체크리스트 카테고리 개수 가져오기 -->
+	<select id="getCategoryNum" parameterType="long" resultType="int">
+		SELECT COUNT(CL_CATEGORY)
+		FROM CV
+		WHERE CL_PLANNUM=#{planNum}
+	</select>
+	<!-- 체크리스트용 뷰 가져오기 -->
+	<select id="getCV" parameterType="long" resultType="com.bob.stepy.dto.ChecklistViewDto">
+		SELECT * FROM CV
+		WHERE CL_PLANNUM=#{planNum} ORDER BY CL_CATEGORY
+	</select>
+	<!-- 체크리스트 상태 변경 -->
+	<update id="pChangeCheck" parameterType="HashMap">
+		UPDATE CL
+		SET CL_CHECK=#{check}
+		WHERE CL_PLANNUM=#{planNum} AND CL_CATEGORY=#{category} AND CL_CNT=#{itemCnt}
+	</update>
+	<!-- 체크리스트 특정 항목 가져오기 -->
+	<select id="getACheck" parameterType="HashMap" resultType="com.bob.stepy.dto.CheckListDto">
+		SELECT * FROM CL
+		WHERE CL_PLANNUM=#{planNum} AND CL_CATEGORY=#{category} AND CL_CNT=#{itemCnt}
+	</select>
+	<!-- 가입시 준비물 초기 등록 -->
+	<insert id="pInitChecklist1">
+		INSERT INTO CL
+		VALUES (#{planNum}, 0, '필수 준비물', 1, '의류', DEFAULT)
+	</insert>
+	<insert id="pInitChecklist2">
+		INSERT INTO CL
+		VALUES (#{planNum}, 0, '필수 준비물', 2, '세면용품', DEFAULT)
+	</insert>
+	<!-- 준비물 추가하기 -->
+	<insert id="pAddCheckItem" parameterType="com.bob.stepy.dto.CheckListDto">
+		INSERT INTO CL
+		VALUES (#{cl_plannum},#{cl_category},#{cl_categoryname},#{cl_cnt},#{cl_item},DEFAULT)
+	</insert>
+	<!-- 준비물 삭제하기 -->
+	<delete id="delCheckItem" parameterType="com.bob.stepy.dto.CheckListDto">
+		DELETE CL
+		WHERE CL_PLANNUM=#{cl_plannum} AND CL_CATEGORY=#{cl_category} AND CL_CNT=#{cl_cnt}
+	</delete>
+	<!-- 준비물 카운트 정렬하기 -->
+	<update id="reduceCheckItemCnt" parameterType="com.bob.stepy.dto.CheckListDto">
+		UPDATE CL
+		SET CL_CNT=CL_CNT-1
+		WHERE CL_PLANNUM=#{cl_plannum} AND CL_CATEGORY=#{cl_category} AND CL_CNT>#{cl_cnt}
+	</update>
+	<!-- 체크리스트 카테고리 삭제하기 -->
+	<delete id="delCheckCategory" parameterType="com.bob.stepy.dto.ChecklistViewDto">
+		DELETE CL
+		WHERE CL_PLANNUM=#{cl_plannum} AND CL_CATEGORY=#{cl_category}
+	</delete>
+	<!-- 체크리스트 카테고리 정렬하기 -->
+	<update id="reduceCheckCategoryCnt" parameterType="com.bob.stepy.dto.ChecklistViewDto">
+		UPDATE CL
+		SET CL_CATEGORY=CL_CATEGORY-1
+		WHERE CL_PLANNUM=#{cl_plannum} AND CL_CATEGORY>#{cl_category}
+	</update>
+	<!-- 준비물 수정하기 -->
+	<update id="pEditCheckItem" parameterType="com.bob.stepy.dto.CheckListDto">
+		UPDATE CL
+		SET CL_ITEM=#{cl_item}
+		WHERE CL_PLANNUM=#{cl_plannum} AND CL_CATEGORY=#{cl_category} AND CL_CNT=#{cl_cnt}
+	</update>
+	<!-- 카테고리 수정하기 -->
+	<update id="pEditCheckCategory" parameterType="com.bob.stepy.dto.CheckListDto">
+		UPDATE CL
+		SET CL_CATEGORYNAME=#{cl_categoryname}
+		WHERE CL_PLANNUM=#{cl_plannum} AND CL_CATEGORY=#{cl_category}
+	</update>
+	<!-- 초대코드 중복검사 -->
+	<select id="checkInviteCode" parameterType="long" resultType="int">
+		SELECT COUNT(*) FROM I
+		WHERE I_CODE=#{code}
+	</select>
+	<!-- 일행 초대 등록 -->
+	<insert id="pInviteMember" parameterType="com.bob.stepy.dto.InviteDto">
+		INSERT INTO I
+		VALUES (#{i_code},#{i_plannum},#{i_mid},#{i_planname},#{i_inviteid})
+	</insert>
+	<!-- 회원 리스트 가져오기 -->
+	<select id="pGetMemberList" resultType="com.bob.stepy.dto.MemberDto">
+		SELECT * FROM M
+	</select>
+	<!-- 초대 리스트 가져오기 -->
+	<select id="pGetInviteList" resultType="com.bob.stepy.dto.InviteDto">
+		SELECT * FROM I
+	</select>
+	<!-- 초대 여부 확인 카운트 -->
+	<select id="pCheckInvite" resultType="int">
+		SELECT COUNT(*) FROM I
+		WHERE I_INVITEID=#{id}
+	</select>
+	<!-- 초대 유효성 검사 -->
+	<select id="pCheckCodeValid" parameterType="com.bob.stepy.dto.InviteDto" resultType="int">
+		SELECT COUNT(*) FROM I
+		WHERE I_CODE=#{i_code} AND I_INVITEID=#{i_inviteid}
+	</select>
+	<!-- 일행 추가 -->
+	<update id="pJoinPlan1" parameterType="com.bob.stepy.dto.InviteDto">
+		UPDATE T
+		SET T_MEMBER1=#{i_inviteid}
+		WHERE T_PLANNUM=#{i_plannum}
+	</update>
+	<update id="pJoinPlan2" parameterType="com.bob.stepy.dto.InviteDto">
+		UPDATE T
+		SET T_MEMBER2=#{i_inviteid}
+		WHERE T_PLANNUM=#{i_plannum}
+	</update>
+	<update id="pJoinPlan3" parameterType="com.bob.stepy.dto.InviteDto">
+		UPDATE T
+		SET T_MEMBER3=#{i_inviteid}
+		WHERE T_PLANNUM=#{i_plannum}
+	</update>
+	<update id="pJoinPlan4" parameterType="com.bob.stepy.dto.InviteDto">
+		UPDATE T
+		SET T_MEMBER4=#{i_inviteid}
+		WHERE T_PLANNUM=#{i_plannum}
+	</update>
+	<update id="pJoinPlan5" parameterType="com.bob.stepy.dto.InviteDto">
+		UPDATE T
+		SET T_MEMBER5=#{i_inviteid}
+		WHERE T_PLANNUM=#{i_plannum}
+	</update>
+	<!-- 초대 삭제 -->
+	<delete id="pDelInvite" parameterType="com.bob.stepy.dto.InviteDto">
+		DELETE I
+		WHERE I_CODE=#{i_code}
+	</delete>
+	<!-- 초대 회원 중복 검사 -->
+	<select id="pCheckInviteId" parameterType="com.bob.stepy.dto.InviteDto" resultType="int">
+		SELECT COUNT(*) FROM I
+		WHERE I_PLANNUM=#{i_plannum} AND I_INVITEID=#{i_inviteid}
+	</select>
+	<!-- 여행 삭제 -->
+	<delete id="pDelPlan">
+		DELETE T
+		WHERE T_PLANNUM=#{planNum}
+	</delete>
+	<!-- 여행 삭제시 일정 삭제 -->
+	<delete id="pDelSchedule">
+		DELETE AP
+		WHERE AP_PLANNUM=#{planNum}
+	</delete>
+	<!-- 여행 삭제시 가계부 삭제 -->
+	<delete id="pDelHousehold">
+		DELETE H
+		WHERE H_PLANNUM=#{planNum}
+	</delete>
+	<!-- 여행 삭제시 체크리스트 삭제 -->
+	<delete id="pDelChecklist">
+		DELETE CL
+		WHERE CL_PLANNUM=#{planNum}
+	</delete>
+	<!-- 여행 정보 수정 -->
+	<update id="pEditPlan" parameterType="com.bob.stepy.dto.TravelPlanDto">
+		UPDATE T
+		SET T_PLANNAME=#{t_planname}, T_SPOT=#{t_spot}, T_STDATE=#{t_stdate}, T_BKDATE=#{t_bkdate}
+		WHERE T_PLANNUM=#{t_plannum}
+	</update>
+	<!-- 기간 초과 일정 정보 삭제 -->
+	<delete id="pDelOverDate" parameterType="long">
+		DELETE AP
+		WHERE AP_DAY>#{newDays+1}
+	</delete>
+	<!-- 기간 초과 가계부 정보 삭제 -->
+	<delete id="pDelOverHousehold" parameterType="long">
+		DELETE H
+		WHERE H_DAY>#{newDays+1}
+	</delete>
+	<!-- 현재 일정 초대중인 멤버 가져오기 -->
+	<select id="pGetWaitingMember" parameterType="long" resultType="com.bob.stepy.dto.InviteDto">
+		SELECT * FROM I
+		WHERE I_PLANNUM=#{planNum}
+	</select>
+	<!-- 초대 취소 -->
+	<delete id="pCancelInvite" parameterType="com.bob.stepy.dto.InviteDto">
+		DELETE I
+		WHERE I_PLANNUM=#{i_plannum} AND I_INVITEID=#{i_inviteid}
+	</delete>
+	<!-- 회원 내보내기 -->
+	<update id="pDepmember1" parameterType="long">
+		UPDATE T
+		SET T_MEMBER1=' '
+		WHERE T_PLANNUM=#{t_plannum}
+	</update>
+	<update id="pDepmember2" parameterType="long">
+		UPDATE T
+		SET T_MEMBER2=' '
+		WHERE T_PLANNUM=#{t_plannum}
+	</update>
+	<update id="pDepmember3" parameterType="long">
+		UPDATE T
+		SET T_MEMBER3=' '
+		WHERE T_PLANNUM=#{t_plannum}
+	</update>
+	<update id="pDepmember4" parameterType="long">
+		UPDATE T
+		SET T_MEMBER4=' '
+		WHERE T_PLANNUM=#{t_plannum}
+	</update>
+	<update id="pDepmember5" parameterType="long">
+		UPDATE T
+		SET T_MEMBER5=' '
+		WHERE T_PLANNUM=#{t_plannum}
+	</update>
+</mapper>

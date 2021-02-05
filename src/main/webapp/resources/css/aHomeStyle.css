@@ -1,0 +1,61 @@
+@charset "UTF-8";
+
+.aMenu {
+	height: 60px;
+	padding: 10px !important;
+	border: 2px solid #4375d9;
+	text-align: center;
+}
+
+.row .aMenu {
+	margin: 10px;
+	margin-top: 0;
+}
+
+}
+.row .aMenu:last-child {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.brMenu {
+	line-height: 18px !important;
+}
+
+.nonBrMenu {
+	line-height: 36px !important;
+}
+
+.aMenu:hover {
+	background-color: #eeeeee;
+}
+
+.aLink {
+	line-height: 20px;
+	font-weight: bolder;
+}
+
+.aLink:hover {
+	text-decoration: none;
+}
+
+.aLink:visited {
+	text-decoration: none;
+}
+
+@media screen and (max-width: 1000px) {
+	.aMenu {
+		display: block;
+		height: 60px;
+		width: 400px !important;
+	}
+}
+
+/*드래그 차단*/
+.no-drag {
+	-ms-user-select: none;
+	-moz-user-select: -moz-none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	user-select: none;
+}

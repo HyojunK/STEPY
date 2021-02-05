@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 맵퍼로 xml과 연결시킬 dao는 이름이 같아야 함 단, 맵퍼를 사용하려면 마이바티스 DOCTYPE 임포트가 필요 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bob.stepy.dao.MemberDao">
+
+	<select id="duplicationCheck" parameterType="String"
+		resultType="int">
+		SELECT COUNT (M_ID) FROM M WHERE M_ID = #{tempid}
+	</select>
+
+	<select id="memberInsert"
+		parameterType="com.bob.stepy.dto.MemberDto">
+		INSERT INTO M VALUES (#{m_id}, #{m_pwd}, #{m_email},
+		#{m_name},
+		#{m_nickname}, #{m_birth}, #{m_gender}, #{m_phone},
+		#{m_addr})
+	</select>
+
+	<select id="getMemeberInfo" parameterType="String"
+		resultType="com.bob.stepy.dto.MemberDto">
+		SELECT * FROM M WHERE M_ID=#{m_id}
+	</select>
+
+	<select id="getEncryptizedPass" parameterType="String"
+		resultType="String">
+		SELECT M_PWD FROM M WHERE M_ID = #{m_id}
+	</select>
+
+	<!-- 이거..... usegeneratedKey 안 맞춰도 되나? -->
+
+	<insert id="mThumbUpload"
+		parameterType="com.bob.stepy.dto.FileUpDto">
+		INSERT INTO F(F_NUM, F_ORINAME, F_SYSNAME, F_MNUM)
+		VALUES(FILEUP_SEQ.NEXTVAL, #{f_oriname}, #{f_sysname}, #{f_mnum})
+	</insert>
+
+	<update id="mKakaoThumbUpload"
+		parameterType="com.bob.stepy.dto.FileUpDto">
+		UPDATE F SET F_ORINAME=#{f_oriname}, F_SYSNAME=
+		#{f_sysname} WHERE F_MNUM = #{f_mnum}
+	</update>
+
+	<select id="mGetProfile" parameterType="String"
+		resultType="com.bob.stepy.dto.FileUpDto">
+		SELECT * FROM F WHERE F_MNUM = #{userid}
+	</select>
+
+	<select id="mGetBfMsg" parameterType="String"
+		resultType="com.bob.stepy.dto.MessageDto">
+	<![CDATA[
+		SELECT * FROM (SELECT * FROM MS WHERE MS.MS_MID = #{ms_mid} ORDER BY MS.MS_NUM DESC) WHERE ROWNUM <= 1
+		]]>
+	</select>
+
+	<insert id="mSetMessage"
+		parameterType="com.bob.stepy.dto.MessageDto">
+		INSERT INTO MS VALUES (MESSAGE_SEQ.NEXTVAL, #{ms_mid},
+		#{ms_smid},
+		#{ms_contents}, DEFAULT, #{ms_bfread}, #{ms_afread})
+	</insert>
+
+	<select id="mGetSendList" parameterType="String"
+		resultType="com.bob.stepy.dto.MessageDto">
+		SELECT * FROM (SELECT MS.MS_NUM, MS.MS_MID, MS.MS_SMID,
+		MS.MS_CONTENTS, MS.MS_DATE,
+		MS.MS_BFREAD, MS.MS_AFREAD,
+		MEMBER.M_NICKNAME
+		FROM MS
+		INNER JOIN MEMBER ON MS_MID = MEMBER.M_ID
+		WHERE MS.MS_SMID = #{ms_smid}
+		ORDER BY MS.MS_NUM DESC)
+	</select>
+
+	<select id="mGetReceiveList" parameterType="String"
+		resultType="com.bob.stepy.dto.MessageDto">
+		SELECT * FROM (SELECT MS.MS_NUM, MS.MS_MID, MS.MS_SMID,MS.MS_CONTENTS, MS.MS_DATE,
+		MS.MS_BFREAD, MS.MS_AFREAD,
+		MEMBER.M_NICKNAME
+		FROM MS INNER JOIN MEMBER ON MS_SMID = MEMBER.M_ID
+		WHERE MS.MS_MID = #{hostid}
+		ORDER BY MS.MS_NUM DESC)
+	</select>
+
+	<update id="mUploadAfterView" parameterType="com.bob.stepy.dto.MessageDto">
+		UPDATE MESSAGE
+		SET MS_AFREAD = #{ms_bfread}
+		WHERE MS_MID = #{ms_mid}
+	</update>
+</mapper>

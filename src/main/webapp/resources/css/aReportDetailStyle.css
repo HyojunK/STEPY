@@ -1,0 +1,60 @@
+@charset "UTF-8";
+
+textarea {
+	resize: none;
+	width: 80%;
+}
+
+fieldset {
+	margin-bottom: 10px !important;
+}
+
+.mail_tgt {
+	margin-bottom: 5px;
+}
+
+.mail_tgt:last-child {
+	margin-bottom: 0;
+}
+
+input[name="subject"] {
+	text-align: center;
+}
+
+.detailBtn {
+	padding: 10px !important;
+	border: 2px solid #4375d9;
+	cursor: pointer;
+	width: 20%;
+	margin: 0 auto;
+}
+
+#condition {
+	text-align: center;
+	margin-bottom: 5px;
+}
+
+#dispose {
+	margin-bottom: 5px;
+}
+
+.dispose-none {
+	display: none;
+}
+
+.finished {
+	background-color: #82ff9e;
+}
+
+.unfinished {
+	background-color: #ff515e;
+}
+
+/*드래그 차단*/
+.no-drag {
+	-ms-user-select: none;
+	-moz-user-select: -moz-none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	user-select: none;
+}

@@ -1,0 +1,65 @@
+@charset "UTF-8";
+
+.mailBtn, .eventBtn, .reportBtn {
+	width: 200px !important;
+	height: 200px;
+	vertical-align: middle;
+	text-align: center;
+	border-radius: 50%;
+	font-size: 25px;
+	font-weight: bolder;
+	margin-right: 20px;
+	margin-bottom: 20px;
+	line-height: 200px;
+}
+
+.mailBtn, .eventBtn, .reportBtn {
+	color: #ffffff;
+	text-decoration: none;
+}
+
+.mailBtn:hover, .eventBtn:hover, .reportBtn:hover {
+	color: #ffffff;
+	text-decoration: none;
+}
+
+.mailBtn:nth-child(1), .eventBtn:nth-child(1), .reportBtn:nth-child(1) {
+	background-color: #6bb5fe;
+}
+
+.mailBtn:nth-child(2), .eventBtn:nth-child(2), .reportBtn:nth-child(2) {
+	background-color: #ffb877;
+}
+
+.mailBtn:nth-child(3), .reportBtn:nth-child(3) {
+	background-color: #42ffbd;
+	margin-right: 0;
+	margin-bottom: 0;
+}
+
+/*이벤트 관련 전용*/
+.eventBtn {
+	line-height: 100px;
+}
+
+.reportBtn {
+	line-height: 100px;
+}
+
+@media screen and (max-width: 1000px) {
+	.mailBtn, .eventBtn, .reportBtn {
+		display: block;
+		height: 200px;
+		width: 200px !important;
+		margin: 0 auto;
+	}
+}
+
+/*드래그 차단*/
+.no-drag {
+	-ms-user-select: none;
+	-moz-user-select: -moz-none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	user-select: none;
+}

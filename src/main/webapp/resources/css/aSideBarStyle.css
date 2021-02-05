@@ -1,0 +1,34 @@
+@charset "UTF-8";
+
+.sideBar_title {
+	border-bottom: 3px solid #4375d9;
+	font-size: 24px;
+	text-align: center;
+	font-weight: bolder;
+	cursor: default;
+}
+
+.sidebar {
+	padding: 0;
+	border-right: 3px solid #4375d9;
+	border-collapse: collapse;
+}
+
+.active {
+	
+}
+
+@media screen and (max-width: 768px) {
+	.sidebar {
+		border-right: none;
+	}
+}
+
+/*드래그 차단*/
+.no-drag {
+	-ms-user-select: none;
+	-moz-user-select: -moz-none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	user-select: none;
+}

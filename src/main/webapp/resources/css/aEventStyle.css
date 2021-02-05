@@ -1,0 +1,44 @@
+@charset "UTF-8";
+
+/*
+이벤트 메인 페이지 영역
+*/
+.mailBtn, .eventBtn {
+	width: 200px !important;
+	height: 200px;
+	vertical-align: middle;
+	text-align: center;
+	line-height: 100px;
+	border-radius: 50%;
+	font-size: 30px;
+	font-weight: bolder;
+}
+
+.eventBtn:nth-child(1) {
+	margin-right: 20px;
+	background-color: #d32add;
+}
+
+.eventBtn:nth-child(2) {
+	background-color: #d32add;
+}
+
+/*
+/이벤트 메인 페이지 영역 끝
+*/
+
+/*
+이벤트 목록 페이지 스타일 영역
+*/
+
+/*
+이벤트 목록 페이지 스타일 영역 끝
+*/
+
+/*
+이벤트 작성 페이지 스타일 영역
+*/
+
+/*
+이벤트 작성 페이지 스타일 영역 끝
+*/

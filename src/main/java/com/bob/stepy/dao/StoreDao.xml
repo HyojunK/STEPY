@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.bob.stepy.dao.StoreDao">
+	
+	<!-- 입점신청 -->	
+	<insert id="cJoinProc" parameterType="com.bob.stepy.dto.CeoDto">
+		INSERT INTO C VALUES (#{c_num}, #{c_pwd}, #{c_email}, default, #{c_name}, #{c_phone})
+	</insert>
+	<insert id="stJoinProc" parameterType="com.bob.stepy.dto.StoreDto">
+		INSERT INTO S VALUES (#{s_num}, #{s_phone}, #{s_name}, #{s_addr1}, #{s_addr2}, #{s_addr3}, #{s_summary}, #{s_category}, default)
+	</insert>
+	
+	<!-- 중복체크 -->
+	<select id="stIdCheck" parameterType="String" resultType="Integer">
+		SELECT COUNT(*) FROM C WHERE C_NUM=#{c_num}
+	</select>
+	
+	<!-- 사업자등록증 첨부 -->
+	<insert id="stFileUp" parameterType="HashMap">
+		INSERT INTO F (F_NUM, F_ORINAME, F_SYSNAME, F_CNUM, F_THUMB)
+		VALUES (FILEUP_SEQ.NEXTVAL, #{f_oriname}, #{f_sysname}, #{c_num}, 'AUTH')
+	</insert>
+	
+	<!-- 로그인 -->
+	<select id="getStEncPwd" parameterType="String" resultType="String">
+		SELECT C_PWD FROM C WHERE C_NUM=#{c_num}
+	</select>
+
+	<!-- 로그인 정보 가져오기 -->
+	<select id="getCeoInfo" parameterType="String" resultType="com.bob.stepy.dto.CeoDto">
+		SELECT * FROM C WHERE C_NUM=#{c_num}
+	</select>
+	<select id="getStoreInfo" parameterType="String" resultType="com.bob.stepy.dto.StoreDto">
+		SELECT * FROM S WHERE S_NUM=#{c_num}
+	</select>
+	
+	<!-- 비밀번호 찾기 -->
+	<!-- 1단계, 2단계 기존 쿼리문 활용 -->
+	<!-- 비밀번호 변경 -->
+	<update id="stResetPwdProc" parameterType="com.bob.stepy.dto.CeoDto">
+		UPDATE C SET C_PWD = #{c_pwd} WHERE C_NUM=#{c_num}
+	</update>
+	
+	<!-- 상품 리스트 가져오기 -->
+	<select id="getProdList" parameterType="String" resultType="com.bob.stepy.dto.ProductDto">
+		SELECT * FROM PL WHERE PL_CNUM=#{pl_cnum} ORDER BY PL_NUM DESC
+	</select>
+	<!-- 상품 1개 정보 가져오기 -->
+	<select id="getProdInfo" parameterType="Integer" resultType="com.bob.stepy.dto.ProductDto">
+		SELECT * FROM PL WHERE PL_NUM=${pl_num}
+	</select>
+	
+	<!-- 상품 등록하기 -->	
+	<insert id="stProdInsert" parameterType="com.bob.stepy.dto.ProductDto"
+		useGeneratedKeys="true" keyProperty="pl_num">
+		<selectKey keyProperty="pl_num" resultType="int" order="BEFORE">
+			SELECT PRODUCTLIST_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO PL
+		VALUES (#{pl_cnum}, ${pl_num}, #{pl_name}, #{pl_price}, #{pl_person}, #{pl_qty}, #{pl_text})	
+	</insert>
+	<!-- 상품 메인사진 가져오기 -->
+	<select id="getProdThumb" parameterType="Integer" resultType="com.bob.stepy.dto.FileUpDto">
+		SELECT * FROM F WHERE F_PLNUM=#{f_plnum} AND F_THUMB='THUMB'
+	</select>
+	<!-- 상품 썸네일 첨부 -->
+	<insert id="stProdThumbUp" parameterType="HashMap">
+		INSERT INTO F (F_NUM, F_ORINAME, F_SYSNAME, F_PLNUM, F_THUMB)
+		VALUES (FILEUP_SEQ.NEXTVAL, #{f_oriname}, #{f_sysname}, #{pl_num}, 'THUMB')	
+	</insert>
+	<!-- 그 외 상품 사진 첨부 -->
+	<insert id="stProdFileUp" parameterType="HashMap">
+		INSERT INTO F (F_NUM, F_ORINAME, F_SYSNAME, F_PLNUM, F_THUMB)
+		VALUES (FILEUP_SEQ.NEXTVAL, #{f_oriname}, #{f_sysname}, #{pl_num}, 'OTHER')
+	</insert>
+	<!-- 상품 추가 사진 불러오기 -->
+	<select id="getProdPhotos" parameterType="Integer" resultType="com.bob.stepy.dto.FileUpDto">
+		SELECT * FROM F WHERE F_PLNUM=#{f_plnum} AND F_THUMB='OTHER'
+	</select>
+	
+	<!-- 사업주, 매장 정보 변경하기 -->
+	<update id="stModifyCeo" parameterType="com.bob.stepy.dto.CeoDto">
+		UPDATE C SET C_PHONE=#{c_phone}, C_EMAIL=#{c_email} WHERE C_NUM=#{c_num}
+	</update>
+	<update id="stModifyStore" parameterType="com.bob.stepy.dto.StoreDto">
+		UPDATE S SET S_PHONE=#{s_phone}, S_ADDR1=#{s_addr1}, S_ADDR2=#{s_addr2}, S_ADDR3=#{s_addr3},
+		S_SUMMARY=#{s_summary} WHERE S_NUM=#{s_num}
+	</update>	
+	
+	<!-- 사업주 비밀번호 변경을 위한 현 비밀번호 가져오기 -->
+	<select id="stGetPwd" parameterType="String" resultType="String">
+		SELECT C_PWD FROM C WHERE C_NUM=#{c_num}
+	</select>
+	<update id="stModifyPwd" parameterType="com.bob.stepy.dto.CeoDto">
+		UPDATE C SET C_PWD=#{c_pwd} WHERE C_NUM=#{c_num}
+	</update>
+	
+	
+	<!-- 가게 썸네일 첨부 -->
+	<insert id="stThumbUp" parameterType="HashMap">
+		INSERT INTO F (F_NUM, F_ORINAME, F_SYSNAME, F_CNUM, F_THUMB)
+		VALUES (FILEUP_SEQ.NEXTVAL, #{f_oriname}, #{f_sysname}, #{pl_cnum}, 'THUMB')	
+	</insert>
+	<!-- 가게 추가사진 첨부 -->
+	<insert id="stPhotoUp" parameterType="HashMap">
+		INSERT INTO F (F_NUM, F_ORINAME, F_SYSNAME, F_CNUM, F_THUMB)
+		VALUES (FILEUP_SEQ.NEXTVAL, #{f_oriname}, #{f_sysname}, #{pl_cnum}, 'OTHER')	
+	</insert>
+	<!-- 썸네일 불러오기 -->
+	<select id="getThumb" parameterType="String" resultType="com.bob.stepy.dto.FileUpDto">
+		SELECT * FROM F WHERE F_CNUM=#{f_cnum} AND F_THUMB='THUMB'
+	</select>
+	<!-- 가게 썸네일 삭제하기 -->
+	<select id="stDeleteThumb" parameterType="String">
+		DELETE FROM F WHERE F_SYSNAME=#{f_sysname}
+	</select>
+	<!-- 가게 사진 불러오기 -->
+	<select id="getPhotos" parameterType="String" resultType="com.bob.stepy.dto.FileUpDto">
+		SELECT * FROM F WHERE F_CNUM=#{f_cnum} AND F_THUMB='OTHER'
+	</select>
+	<!-- 미인증 업체 리스트 불러오기 -->
+	<select id="getAuthList" resultType="com.bob.stepy.dto.CeoDto">
+		SELECT * FROM C WHERE C_JOIN='pending'
+	</select>
+	
+	<!-- 업체 찜하기 -->
+	<insert id="stIncart" parameterType="com.bob.stepy.dto.InCartDto">
+		INSERT INTO IC VALUES (INCART_SEQ.NEXTVAL, #{ic_cnum}, #{ic_mid})
+	</insert>
+	<!-- 업체 찜 해제 -->
+	<delete id="stIncartEmpty" parameterType="com.bob.stepy.dto.InCartDto">
+		DELETE FROM IC WHERE IC_CNUM=#{ic_cnum} AND IC_MID=#{ic_mid}	
+	</delete>
+	<!-- 업체 찜 정보 가져오기 -->
+	<select id="GetIncart" parameterType="com.bob.stepy.dto.InCartDto" resultType="Integer">
+		SELECT COUNT(*) FROM IC WHERE IC_CNUM=#{ic_cnum} AND IC_MID=#{ic_mid}
+	</select>
+	
+	<!-- 상품 사진 및 정보 삭제하기 -->
+	<select id="stGetProdPhotos" parameterType="Integer" resultType="com.bob.stepy.dto.FileUpDto">
+		SELECT * FROM F WHERE F_PLNUM=${pl_num}
+	</select>
+	<select id="stDeleteProd" parameterType="Integer">
+		DELETE FROM PL WHERE PL_NUM=${pl_num}
+	</select>
+	<select id="stDeleteProdPhoto" parameterType="Integer">
+		DELETE FROM F WHERE F_PLNUM=${pl_num}
+	</select>
+	
+	<!-- 업체 메일 인증 업데이트 -->
+	<update id="stUpdateJoin" parameterType="String">
+		UPDATE C SET C_JOIN='approve' WHERE C_NUM=#{c_num}
+	</update>
+	
+	<!-- 사업자 등록증 가져오기 -->
+	<select id="stGetBiz" resultType="com.bob.stepy.dto.FileUpDto">
+		SELECT * FROM F WHERE F_CNUM=#{c_num} AND F_THUMB='AUTH'
+	</select>
+	
+	
+</mapper>
+
+

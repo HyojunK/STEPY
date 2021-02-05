@@ -1,0 +1,31 @@
+@charset "UTF-8";
+
+.mailBtn {
+	width: 200px !important;
+	height: 200px;
+	vertical-align: middle;
+	text-align: center;
+	line-height: 200px;
+	border-radius: 50%;
+	font-size: 30px;
+	font-weight: bolder;
+}
+
+.mailBtn:nth-child(1) {
+	background-color: #6bb5fe;
+	margin-right: 20px;
+}
+
+.mailBtn:nth-child(2) {
+	background-color: #ffb877;
+}
+
+.mailBtn {
+	color: #ffffff;
+	text-decoration: none;
+}
+
+.mailBtn:hover {
+	color: #ffffff;
+	text-decoration: none;
+}

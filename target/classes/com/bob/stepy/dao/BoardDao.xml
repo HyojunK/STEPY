@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bob.stepy.dao.BoardDao">
+
+	<select id="getList_1" parameterType="Integer"
+			resultType="com.bob.stepy.dto.PostDto2">
+			<![CDATA[
+			SELECT * FROM PLIST_1
+			WHERE RONUM >=#{pageNum} * 15 - 14
+			AND RONUM <=#{pageNum} * 15
+			]]>
+	</select>		
+	
+	<select id="getList_2" parameterType="Integer"
+			resultType="com.bob.stepy.dto.PostDto2">
+			<![CDATA[
+			SELECT * FROM PLIST_2
+			WHERE RONUM >=#{pageNum} * 15 - 14
+			AND RONUM <=#{pageNum} * 15
+			]]>
+	</select>
+	
+	<select id="getList_3" parameterType="Integer"
+			resultType="com.bob.stepy.dto.PostDto2">
+			<![CDATA[
+			SELECT * FROM PLIST_3
+			WHERE RONUM >=#{pageNum} * 15 - 14
+			AND RONUM <=#{pageNum} * 15
+			]]>
+	</select>
+	
+	<select id="getList_4" parameterType="Integer"
+			resultType="com.bob.stepy.dto.PostDto2">
+			<![CDATA[
+			SELECT * FROM PLIST_4
+			WHERE RONUM >=#{pageNum} * 15 - 14
+			AND RONUM <=#{pageNum} * 15
+			]]>
+	</select>
+	
+	<select id="getList_5" parameterType="Integer"
+			resultType="com.bob.stepy.dto.SuggestDto">
+			<![CDATA[
+			SELECT * FROM SUG
+			WHERE SUG_NUM >=#{pageNum} * 15 - 14
+			AND SUG_NUM <=#{pageNum} * 15
+			]]>
+	</select>
+	
+	
+	<!-- <select id="pList_3" parameterType="String"
+	resultType="com.bob.stepy.dto.PostDto2">
+			SELECT * FROM PLIST_3 WHERE PCATEGORY=#{pcategory}
+	</select> -->
+	
+	<select id="getPostCnt_1" resultType="Integer">
+		SELECT COUNT(*) FROM PLIST_1
+	</select>
+	
+	<select id="getPostCnt_2" resultType="Integer">
+		SELECT COUNT(*) FROM PLIST_2
+	</select>
+	
+	<select id="getPostCnt_3" resultType="Integer">
+		SELECT COUNT(*) FROM PLIST_3
+	</select>
+	
+	<select id="getPostCnt_4" resultType="Integer">
+		SELECT COUNT(*) FROM PLIST_4
+	</select>
+	
+	<select id="getPostCnt_5" resultType="Integer">
+		SELECT COUNT(*) FROM SUG
+	</select>
+	
+	<update id="viewUpdate" parameterType="Integer">
+		UPDATE P SET P_VIEW = P_VIEW+1 WHERE P_NUM=#{pnum}
+	</update>
+	
+	<update id="sviewUpdate" parameterType="Integer">
+		UPDATE SUG SET SUG_VIEW = SUG_VIEW + 1 WHERE SUG_NUM=#{snum}	
+	</update>
+	
+	<select id="getContent_1" parameterType="Integer"
+	resultType="com.bob.stepy.dto.PostDto2">
+		SELECT * FROM PLIST_1 WHERE PNUM=#{pnum}	
+	</select>
+	
+	<select id="getContent_2" parameterType="Integer"
+	resultType="com.bob.stepy.dto.PostDto2">
+		SELECT * FROM PLIST_2 WHERE PNUM=#{pnum}	
+	</select>
+	
+	<select id="getContent_3" parameterType="Integer"
+	resultType="com.bob.stepy.dto.PostDto2">
+		SELECT * FROM PLIST_3 WHERE PNUM=#{pnum}	
+	</select>
+	
+	<select id="getContent_4" parameterType="Integer"
+	resultType="com.bob.stepy.dto.PostDto2">
+		SELECT * FROM PLIST_4 WHERE PNUM=#{pnum}	
+	</select>
+	
+	<select id="getContent_5" parameterType="Integer"
+	resultType="com.bob.stepy.dto.SuggestDto">
+		SELECT * FROM SUG WHERE SUG_NUM=#{snum}	
+	</select>
+	
+	<select id="getcategory" parameterType="Integer" resultType="String">
+	
+		SELECT PCATEGORY FROM BLIST WHERE PNUM=#{pnum}
+	
+	</select>
+	
+	<insert id="PostInsert" parameterType="com.bob.stepy.dto.PostDto"
+			useGeneratedKeys="true" keyProperty="p_num">
+			<selectKey keyProperty="p_num" resultType="int"
+			order="BEFORE">
+				SELECT POST_SEQ.NEXTVAL FROM DUAL
+			</selectKey>
+			INSERT INTO P
+			VALUES (${p_num},#{p_title},#{p_contents},#{p_category},
+			DEFAULT,DEFAULT,DEFAULT,#{p_mid},DEFAULT)
+	
+	</insert>
+	
+	<insert id="SugInsert" parameterType="com.bob.stepy.dto.SuggestDto">
+			INSERT INTO SUG
+			VALUES (SUG_SEQ.NEXTVAL,#{sug_title},#{sug_contents},
+			#{sug_mid},DEFAULT,DEFAULT)
+	
+	</insert>
+	
+	<insert id="fileInsert" parameterType="HashMap">
+		INSERT INTO CON VALUES (CON_SEQ.NEXTVAL,#{oriName},#{sysName},#{pnum})
+	</insert>
+	
+	<select id="getpostFile" parameterType="Integer"
+			resultType="com.bob.stepy.dto.PostFileDto">
+		SELECT * FROM CON WHERE CON_PNUM=#{pnum}
+	</select>
+	
+	<select id="getOriName" parameterType="String"
+			resultType="String">
+		SELECT CON_ORINAME FROM CON WHERE CON_SYSNAME=#{con_sysname}
+	</select>
+	
+	<update id="boardUpdate" parameterType="com.bob.stepy.dto.PostDto">
+		UPDATE P SET P_TITLE=#{p_title},P_CONTENTS=#{p_contents}
+		,P_CATEGORY=#{p_category} WHERE P_NUM=#{p_num}
+	</update>
+	
+	<update id="sugUpdate" parameterType="com.bob.stepy.dto.SuggestDto">
+		UPDATE SUG SET SUG_TITLE=#{sug_title},SUG_CONTENTS=#{sug_contents}
+	    WHERE SUG_NUM=#{sug_num}
+	</update>
+	
+	<delete id="fileDelete" parameterType="String">
+		DELETE FROM CON WHERE CON_SYSNAME=#{syName}
+	</delete>
+	
+	<insert id="replyInsert"
+		parameterType="com.bob.stepy.dto.ReplyDto">
+			INSERT INTO R
+			VALUES (REPLY_SEQ.NEXTVAL,#{r_contents},
+			#{r_secret},DEFAULT,#{r_id},#{r_pnum},DEFAULT)
+	</insert>
+	
+	<select id="getReplyList" parameterType="Integer"
+		resultType="com.bob.stepy.dto.ReplyDto">
+		SELECT * FROM REPLY WHERE R_PNUM=#{pnum} ORDER BY R_NUM DESC
+	
+	</select>
+	
+	<delete id="Delete" parameterType="Integer">
+	
+		DELETE FROM R WHERE R_NUM=#{rnum} 
+	
+	</delete>
+	
+	<delete id="Sugdelete" parameterType="Integer">
+		
+		DELETE FROM SUG WHERE SUG_NUM=#{sug_num}
+	
+	</delete>
+	
+	<delete id="replyDelete" parameterType="Integer">
+	
+		DELETE FROM R WHERE R_PNUM=#{pnum} 
+	
+	</delete>
+	
+	<delete id="fileListDelete" parameterType="Integer">
+
+		DELETE FROM CON
+		WHERE CON_PNUM=#{pnum}
+	
+	</delete>
+	
+	<delete id="boardDelet" parameterType="Integer">
+
+		DELETE FROM P
+		WHERE P_NUM=#{pnum}
+	
+	</delete>
+	
+	<insert id="setLike" parameterType="com.bob.stepy.dto.LikedDto">
+	
+		INSERT INTO L VALUES (L_SEQ.NEXTVAL,#{l_pnum},#{l_mid},1)
+	
+	</insert>
+	
+	<update id="likeup" parameterType="Integer">
+	
+		UPDATE P SET P_LIKE = P_LIKE + 1 WHERE P_NUM=#{pnum}
+	
+	</update>
+	
+	<update id="likeupdown" parameterType="Integer">
+	
+		UPDATE P SET P_LIKE = P_LIKE - 1 WHERE P_NUM=#{pnum}
+	
+	</update>
+	
+	<select id="getlike" parameterType="com.bob.stepy.dto.LikedDto"
+				resultType="Integer">
+				
+		SELECT COUNT(*) FROM L WHERE L_PNUM=#{l_pnum} AND L_MID=#{l_mid}
+		
+	</select>
+	
+	<delete id="dellike" parameterType="com.bob.stepy.dto.LikedDto">
+	
+		DELETE FROM L WHERE L_PNUM=#{l_pnum} AND L_MID=#{l_mid}
+	
+	</delete>
+	
+	<update id="singoup" parameterType="Integer">
+
+		UPDATE P SET P_REPORT = 1 WHERE P_NUM=#{pnum}
+	
+	</update>
+	
+	<update id="replysingo" parameterType="Integer">
+
+		UPDATE R SET R_REPORT = 1 WHERE R_NUM=#{rnum}
+	
+	</update>
+	
+	<select id="getreport" parameterType="Integer"
+			resultType="Integer">
+	
+		SELECT P_REPORT FROM P WHERE P_NUM=${pnum}
+			
+	</select>
+	
+	<select id="homeList_1" parameterType="Integer"
+			resultType="com.bob.stepy.dto.PostDto2">
+			<![CDATA[
+			SELECT * FROM PLIST_1
+			WHERE RONUM >=#{pageNum} * 6 - 5
+			AND RONUM <=#{pageNum} * 6
+			]]>
+	</select>		
+	
+	<select id="homeList_2" parameterType="Integer"
+			resultType="com.bob.stepy.dto.PostDto2">
+			<![CDATA[
+			SELECT * FROM PLIST_2
+			WHERE RONUM >=#{pageNum} * 6 - 5
+			AND RONUM <=#{pageNum} * 6
+			]]>
+	</select>
+	
+	<select id="homeList_3" parameterType="Integer"
+			resultType="com.bob.stepy.dto.PostDto2">
+			<![CDATA[
+			SELECT * FROM PLIST_3
+			WHERE RONUM >=#{pageNum} * 6 - 5
+			AND RONUM <=#{pageNum} * 6
+			]]>
+	</select>
+
+
+	
+	
+	
+	
+	
+	
+	
+
+</mapper>
