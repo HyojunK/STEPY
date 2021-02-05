@@ -700,4 +700,358 @@ STEPY는 여행을 할 때 예약을 하는 과정과, 일정을 만들고 관�
 	}
 ```
 ![준비물 체크](https://user-images.githubusercontent.com/26563226/107021310-51a7f480-67e7-11eb-95b3-2121eec21f20.gif)
+*****
+### 4. 일정 관리 기능<br>
+#### **일행 초대**
+```javascript
+//일행 초대 페이지 이동
+	@Transactional
+	public ModelAndView pInviteMemberFrm(String id, String planName) {
+		log.info("service - pInviteMemberFrm() - id : " + id + ", planName : " + planName);
+		
+		InviteDto invite = new InviteDto();
+		
+		invite.setI_mid(id);
+		invite.setI_planname(planName);
+		
+		//회원 리스트 가져오기
+		List<MemberDto> mList = tDao.pGetMemberList();
+		
+		mv = new ModelAndView();
+				
+		mv.addObject("invite", invite);
+		mv.addObject("mList", mList);
+		mv.setViewName("pInviteMemberFrm");
+		
+		return mv;
+	}
+
+	//일행 초대
+	public String pInviteMember(InviteDto invite, RedirectAttributes rttr) {
+		log.info("service - pInviteMember()");
+		
+		String msg = null;
+		
+		//초대 코드 생성
+		while(true) {
+			long code = (long)(Math.random()*10000000000000L);
+			System.out.println("invite code : " + code);
+			
+			//생성된 중복 검사
+			int codeCnt = tDao.checkInviteCode(code);
+			
+			if(codeCnt == 0) {
+				//중복되는 코드가 없으면 코드 사용
+				invite.setI_code(code);
+				break;
+			}
+		}
+		
+		//초대 회원 중복 검사
+		int inviteDupCheck = tDao.pCheckInviteId(invite);
+		
+		TravelPlanDto plan = tDao.getPlan(invite.getI_plannum());
+		
+		if(inviteDupCheck == 1) {
+			msg = "이 일정에 이미 초대중인 회원입니다";
+		}
+		else if(plan.getT_member1().equals(invite.getI_inviteid()) || plan.getT_member2().equals(invite.getI_inviteid()) || plan.getT_member3().equals(invite.getI_inviteid()) ||
+				plan.getT_member4().equals(invite.getI_inviteid()) || plan.getT_member5().equals(invite.getI_inviteid())) {
+			msg = "이 일정에 이미 참여중인 회원입니다";
+		}
+		else if(inviteDupCheck == 0) {
+			try {
+				
+				tDao.pInviteMember(invite);
+				
+				msg = invite.getI_inviteid() + "님을 일정에 초대하였습니다";
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+				
+				msg = "초대에 실패하였습니다. 관리자에 문의해주세요";
+			}
+		}
+		
+		rttr.addFlashAttribute("msg", msg);
+		
+		return "redirect:pPlanFrm?planNum=0";
+	}
+```
+![일행 초대](https://user-images.githubusercontent.com/26563226/107022904-4655c880-67e9-11eb-9f65-7fc04f3551b0.gif)
 <br><br>
+#### **초대 취소**
+```javascript
+//초대 취소
+	@Transactional
+	public String pCancelInvite(long planNum, String id, RedirectAttributes rttr) {
+		log.info("service - pCancelInvite() - planNum : " + planNum + ", id : " + id);
+		
+		InviteDto invite = new InviteDto();
+		invite.setI_plannum(planNum);
+		invite.setI_inviteid(id);
+		
+		try {
+			tDao.pCancelInvite(invite);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return "redirect:pPlanFrm?planNum=0";
+	}
+```
+![일행 초대 취소](https://user-images.githubusercontent.com/26563226/107022912-481f8c00-67e9-11eb-9437-5e62637f3988.gif)
+<br><br>
+#### **초대 승인 및 초대 거절**
+```javascript
+//초대 승인
+	@Transactional
+	public String pJoinPlan(long code, long planNum, String id, RedirectAttributes rttr) {
+		log.info("service - pJoinPlan() - code : " + code + ", planNum : " + planNum + ", id : " + id);
+		
+		String msg = null;
+		
+		InviteDto invite = new InviteDto();
+		invite.setI_code(code);
+		invite.setI_plannum(planNum);
+		invite.setI_inviteid(id);
+		
+		//초대코드 유효성 검사
+		int valid = tDao.pCheckCodeValid(invite);
+		
+		if(valid == 1) {
+			//여행에 빈 멤버 자리 검사
+			TravelPlanDto plan = tDao.getPlan(planNum);
+			
+			msg = plan.getT_planname() + " 에 참여하였습니다.";
+			
+			try {
+				
+				if(plan.getT_member1().equals(" ")) {
+					//일정에 추가
+					tDao.pJoinPlan1(invite);
+					//초대코드 삭제
+					tDao.pDelInvite(invite);
+				}
+				else if(plan.getT_member2().equals(" ")) {
+					tDao.pJoinPlan2(invite);
+					tDao.pDelInvite(invite);
+				}
+				else if(plan.getT_member3().equals(" ")) {
+					tDao.pJoinPlan3(invite);
+					tDao.pDelInvite(invite);
+							}
+				else if(plan.getT_member4().equals(" ")) {
+					tDao.pJoinPlan4(invite);
+					tDao.pDelInvite(invite);
+				}
+				else if(plan.getT_member5().equals(" ")) {
+					tDao.pJoinPlan5(invite);
+					tDao.pDelInvite(invite);
+				}
+				else {//일행이 5명 다 차있을 시
+					msg = "더 이상 참여할 수 없습니다!";
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				msg = "오류가 발생했습니다";
+			}
+		}
+		
+		rttr.addFlashAttribute("msg", msg);
+		
+		return "redirect:pPlanFrm?planNum=" + planNum;
+	}
+
+	//초대 거절
+	@Transactional
+	public Map<String, List<InviteDto>> pRejectPlan(long code) {
+		log.info("service - pRejectPlan() - code : " + code);
+		
+		Map<String, List<InviteDto>> iMap = null;
+		
+		try {
+			//초대 삭제
+			InviteDto invite = new InviteDto();
+			invite.setI_code(code);
+			tDao.pDelInvite(invite);
+			
+			//초대 리스트 다시 가져오기
+			List<InviteDto> iList = tDao.pGetInviteList();
+			
+			iMap = new HashMap<String, List<InviteDto>>();
+			iMap.put("iList", iList);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+		return iMap;
+	}
+```
+![초대 승인](https://user-images.githubusercontent.com/26563226/107022927-4bb31300-67e9-11eb-8245-9e3f8be5ea67.gif)
+![초대 거절](https://user-images.githubusercontent.com/26563226/107022932-4ce44000-67e9-11eb-9e8a-97a34f2f0b74.gif)
+<br><br>
+#### **여행 수정**
+```javascript
+//여행 정보 수정 페이지 이동
+	public ModelAndView pEditPlanFrm() {
+		log.info("service - pEditPlanFrm()");
+		
+		mv = new ModelAndView();
+		
+		TravelPlanDto plan = tDao.getPlan((long)session.getAttribute("curPlan"));
+		
+		mv.addObject("plan", plan);
+		mv.setViewName("pEditPlanFrm");
+		
+		return mv;
+	}
+
+	//여행 정보 수정
+	@Transactional
+	public String pEditPlan(TravelPlanDto plan, RedirectAttributes rttr) {
+		log.info("service - pEditPlan()");
+		String msg = null;
+		
+		plan.setT_plannum((long)session.getAttribute("curPlan"));
+		try {
+			//정보 수정
+			tDao.pEditPlan(plan);
+			//새로운 날짜 차이
+			long newDays = getTime(plan.getT_stdate(), plan.getT_bkdate());
+			System.out.println(newDays);
+			//기간을 초과하는 일정 정보 삭제
+			tDao.pDelOverDate(newDays);
+			//기간을 초과하는 가계부 정보 삭제
+			tDao.pDelOverHousehold(newDays);
+			
+			msg = "정보가 수정되었습니다";
+		} catch (Exception e) {
+			e.printStackTrace();
+			
+			msg = "수정에 실패하였습니다";
+		}
+		
+		rttr.addFlashAttribute("msg", msg);
+		return "redirect:pPlanFrm?planNum=0";
+	}
+```
+![여행 수정](https://user-images.githubusercontent.com/26563226/107023391-e6abed00-67e9-11eb-8126-d0be6491ef50.gif)
+<br><br>
+#### **회원 내보내기**
+```javascript
+//회원 내보내기
+	@Transactional
+	public String pDepMember(long planNum, String member, RedirectAttributes rttr) {
+		log.info("service - pDepMember() - planNum : " + planNum + ", member : " + member);
+		String msg = null;
+		
+		try {
+			//일행 삭제
+			switch (member) {
+			case "member1":
+				tDao.pDepmember1(planNum);
+				break;
+			case "member2":
+				tDao.pDepmember2(planNum);			
+				break;
+			case "member3":
+				tDao.pDepmember3(planNum);
+				break;
+			case "member4":
+				tDao.pDepmember4(planNum);
+				break;
+			case "member5":
+				tDao.pDepmember5(planNum);
+				break;
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = "오류가 발생했습니다";
+		}
+		
+		rttr.addFlashAttribute("msg", msg);
+		return "redirect:pPlanFrm?planNum=0";
+	}
+```
+![회원 내보내기](https://user-images.githubusercontent.com/26563226/107022949-52418a80-67e9-11eb-828a-1d92623b4530.gif)
+<br><br>
+#### **여행에서 나가기**
+```javascript
+//여행에서 나가기
+	@Transactional
+	public String pExitPlan(RedirectAttributes rttr) {
+		log.info("service - pExitPlan()");
+		
+		String msg = null;
+		
+		TravelPlanDto plan = tDao.getPlan((long)session.getAttribute("curPlan"));
+		MemberDto member = (MemberDto)session.getAttribute("member");
+		String id = member.getM_id();
+		
+		try {
+			if(plan.getT_member1().equals(id)) {
+				tDao.pDepmember1(plan.getT_plannum());
+			}
+			else if(plan.getT_member2().equals(id)) {
+				tDao.pDepmember2(plan.getT_plannum());
+			}
+			else if(plan.getT_member3().equals(id)) {
+				tDao.pDepmember3(plan.getT_plannum());
+			}
+			else if(plan.getT_member4().equals(id)) {
+				tDao.pDepmember4(plan.getT_plannum());
+			}
+			else if(plan.getT_member5().equals(id)) {
+				tDao.pDepmember5(plan.getT_plannum());
+			}
+			msg = "여행에서 탈퇴하였습니다";
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = "오류가 발생했습니다";
+		}
+		
+		rttr.addFlashAttribute("msg", msg);
+		return "redirect:pPlanList?id=" + id;
+	}
+```
+![여행에서 나가기](https://user-images.githubusercontent.com/26563226/107022959-54a3e480-67e9-11eb-84e0-99ce109b94f1.gif)
+<br><br>
+#### **여행 삭제**
+```javascript
+//여행 삭제
+	@Transactional
+	public String pDelPlan(RedirectAttributes rttr) {
+		log.info("service - pDelPlan");
+		String msg = null;
+		
+		long planNum = (long)session.getAttribute("curPlan");
+		
+		try {
+			//일정 삭제
+			tDao.pDelSchedule(planNum);
+			//가계부 삭제
+			tDao.pDelHousehold(planNum);
+			//체크리스트 삭제
+			tDao.pDelChecklist(planNum);
+			//여행 삭제
+			tDao.pDelPlan(planNum);
+			
+			msg = "여행을 삭제하였습니다";
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = "삭제에 실패하였습니다";
+		}
+		
+		MemberDto member = (MemberDto)session.getAttribute("member");
+		String id = member.getM_id();
+		
+		rttr.addFlashAttribute("msg", msg);
+		
+		return "redirect:pPlanList?id=" + id;
+	}
+```
+![여행 삭제](https://user-images.githubusercontent.com/26563226/107022973-58d00200-67e9-11eb-9970-45ee6e26a3f6.gif)
