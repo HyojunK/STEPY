@@ -2,12 +2,12 @@
 ===
 목차
 ---
-* 프로젝트 소개
-* 개발 환경
-* 주요 역할 및 기능 실행 화면
-* Controller 구성
-* DAO 구성
-* Database 구성
+* [프로젝트 소개](https://github.com/HyojunK/STEPY/blob/master/README.md#%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EC%86%8C%EA%B0%9C)
+* [개발 환경](https://github.com/HyojunK/STEPY#%EA%B0%9C%EB%B0%9C-%ED%99%98%EA%B2%BD)
+* [주요 역할 및 기능 실행 화면](https://github.com/HyojunK/STEPY#%EC%A3%BC%EC%9A%94-%EC%97%AD%ED%95%A0-%EB%B0%8F-%EA%B8%B0%EB%8A%A5-%EC%8B%A4%ED%96%89-%ED%99%94%EB%A9%B4)
+* [Controller 구성](https://github.com/HyojunK/STEPY#controller-%EA%B5%AC%EC%84%B1)
+* [DAO 구성](https://github.com/HyojunK/STEPY#dao-%EA%B5%AC%EC%84%B1)
+* [Database 구성](https://github.com/HyojunK/STEPY#database-%EA%B5%AC%EC%84%B1)
 
 프로젝트 소개
 ---
