@@ -1,5 +1,14 @@
 <img width="200" alt="logo_tp_final01" src="https://user-images.githubusercontent.com/26563226/106992922-e47f6980-67bc-11eb-9461-d4e39bbb036f.png"></img>
 ===
+목차
+---
+* 프로젝트 소개
+* 개발 환경
+* 주요 역할 및 기능 실행 화면
+* Controller 구성
+* DAO 구성
+* Database 구성
+
 프로젝트 소개
 ---
 STEPY는 여행을 할 때 예약을 하는 과정과, 일정을 만들고 관리하는 기능, 그리고 정보를 공유하는 커뮤니티 기능을 하나로 통합하여 이용할 수 있도록 제작한 프로젝트 입니다.
