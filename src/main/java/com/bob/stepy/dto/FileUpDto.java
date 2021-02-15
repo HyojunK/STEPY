@@ -11,5 +11,6 @@ public class FileUpDto {
 	private String f_cnum;
 	private int f_enum;
 	private String f_mnum;
+	private String s_name;
 }
 

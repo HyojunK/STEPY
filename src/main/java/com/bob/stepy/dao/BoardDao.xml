@@ -207,7 +207,7 @@
 	
 	<insert id="setLike" parameterType="com.bob.stepy.dto.LikedDto">
 	
-		INSERT INTO L VALUES (L_SEQ.NEXTVAL,#{l_pnum},#{l_mid},1)
+		INSERT INTO L VALUES (L_SEQ.NEXTVAL,#{l_pnum},#{l_mid})
 	
 	</insert>
 	

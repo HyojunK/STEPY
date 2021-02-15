@@ -2,6 +2,7 @@
 	pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <%@ page session="false"%>
 
 <!DOCTYPE html>
@@ -47,10 +48,10 @@
 	width: 250px;
 	height: 200px;
 	border-radius: 5px;
-	
 }
-.glyphicon-star-empty {
+.star {
 	color: #F2B950;
+	width: 16px;
 }
 .ratingValue {
 	font-size: 15px;
@@ -92,26 +93,35 @@
 				<div class="container">해당 가게가 없습니다.</div>
 			</c:if>
 			<c:if test="${!empty sList}">
-				<c:forEach var="sitem" items="${sList}">
+				<c:forEach var="t" items="${tMap}">
 					<div class="container searchRes">
-						<a href="plProductList?c_num=${sitem.s_num}">
+						<a href="plProductList?c_num=${t.value.s_num}">
 							<div class="media">
 								<div class="media-left">
-									<img class="media-object storeImg" src="resources/upload" 
-										alt="${sitem.s_name}">
+									<c:if test="${fn:contains(t.key, '.jpg')}">
+										<img src="resources/upload${t.key}" class="storeImg">
+									</c:if>
+									
+									<c:if test="${fn:contains(t.key, '.png')}">
+										<img src="resources/upload${t.key}" class="storeImg">
+									</c:if>
+									
+									<c:if test="${fn:contains(t.key, '.jpeg')}">
+										<img src="resources/upload${t.key}" class="storeImg">
+									</c:if>
 								</div>
 								<div class="media-body">
-									<h4 class="media-heading">${sitem.s_name}</h4>
+									<h4 class="media-heading">${t.value.s_name}</h4>
 									<div class="storeRate">
-										<span class="star" data-rate="${sitem.s_rate}">
-											<span class="glyphicon glyphicon-star-empty"></span>
-											<span class="glyphicon glyphicon-star-empty"></span>
-											<span class="glyphicon glyphicon-star-empty"></span>
-											<span class="glyphicon glyphicon-star-empty"></span>
-											<span class="glyphicon glyphicon-star-empty"></span>
+										<span data-rate="${t.value.s_rate}" class="starRating">
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
 										</span>
 										<span class="ratingValue">
-											<fmt:formatNumber value="${sitem.s_rate}" pattern=".0"/></span>
+											<fmt:formatNumber value="${t.value.s_rate}" pattern=".0"/></span>
 									</div>
 								</div>
 							</div>
@@ -130,28 +140,14 @@
 
 
 <script type="text/javascript">
-$('#myTab a').click(function (e) {
-	e.preventDefault()
-	$(this).tab('show')
-})
-
-// 메시지 출력
 $(function(){
-	var message = "${message}";
+	var starRating = $('.starRating');
 	
-	if(message != ""){
-		alert(message);
-		location.reload(true);
-	}
-});
-
-// 별점 : 미완성
-var storeRate = $('.storeRate');
-
-storeRate.each(function(){
-	var star = $(this).attr('data-rate');
-	console.log(star);
-	$(this).find('span:nth-child(-n+' + star + ')').css({color:'#F2B950'});
+	starRating.each(function(){
+		var targetScore = $(this).attr('data-rate');
+		console.log(targetScore);
+		$(this).find('svg:nth-child(-n+' + targetScore + ')').css({color:'#F2B950;'})
+	});
 });
 </script>
 

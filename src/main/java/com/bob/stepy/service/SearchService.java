@@ -1,6 +1,8 @@
 package com.bob.stepy.service;
 
+
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.bob.stepy.dao.BoardDao;
 import com.bob.stepy.dao.SearchDao;
+import com.bob.stepy.dto.FileUpDto;
 import com.bob.stepy.dto.PostDto;
 import com.bob.stepy.dto.StoreDto;
 import com.bob.stepy.util.Paging;
@@ -47,16 +50,28 @@ public class SearchService {
 		mv = new ModelAndView();
 
 		if(keyword != "") {
-			List<StoreDto> sList = sDao.searchHotel(keyword);
+			List<StoreDto> sList = sDao.searchHotel(keyword); // 스토어 리스트
+			Map<String, Object> tMap = new LinkedHashMap<String, Object>(); // 썸네일과 스토어 매칭
+			
+			for(int i = 0; i < sList.size(); i++) {
+				FileUpDto thumbnail = new FileUpDto();
+				thumbnail = sDao.getThumbnail(sList.get(i).getS_num());
+				//tList.add(i, thumbnail);
+				
+				tMap.put(thumbnail.getF_sysname(), sList.get(i));
+			
+				thumbnail = null;
+			}
 			
 			mv.addObject("sList", sList); // DB에서 조회한 데이터 목록을 모델에 추가
+			mv.addObject("tMap", tMap);
 			mv.addObject("keyword", keyword);
 			
 			mv.setViewName("sSearchHotel");
 		}
 		
 		else {
-			mv.addObject("message", "검색할 키워드를 입력해주세요.");
+			mv.addObject("msg", "검색할 키워드를 입력해주세요.");
 			mv.setViewName("sSearchFrm");
 		}
 		
@@ -72,8 +87,22 @@ public class SearchService {
 		
 		if(keyword != "") {
 			List<StoreDto> sList = sDao.searchRestaurant(keyword);
+			Map<String, Object> tMap = new LinkedHashMap<String, Object>(); // 썸네일과 스토어 매칭
+			
+			for(int i = 0; i < sList.size(); i++) {
+				FileUpDto thumbnail = new FileUpDto();
+				thumbnail = sDao.getThumbnail(sList.get(i).getS_num());
+				//tList.add(i, thumbnail);
+				
+				tMap.put(thumbnail.getF_sysname(), sList.get(i));
+			
+				thumbnail = null;
+			}
 			
 			mv.addObject("sList", sList); // DB에서 조회한 데이터 목록을 모델에 추가
+			mv.addObject("tMap", tMap);
+			mv.addObject("keyword", keyword);
+			
 			mv.setViewName("sSearchRestaurant");
 		}
 		
@@ -94,8 +123,22 @@ public class SearchService {
 		
 		if(keyword != "") {
 			List<StoreDto> sList = sDao.searchPlay(keyword);
+			Map<String, Object> tMap = new LinkedHashMap<String, Object>(); // 썸네일과 스토어 매칭
+			
+			for(int i = 0; i < sList.size(); i++) {
+				FileUpDto thumbnail = new FileUpDto();
+				thumbnail = sDao.getThumbnail(sList.get(i).getS_num());
+				//tList.add(i, thumbnail);
+				
+				tMap.put(thumbnail.getF_sysname(), sList.get(i));
+			
+				thumbnail = null;
+			}
 			
 			mv.addObject("sList", sList); // DB에서 조회한 데이터 목록을 모델에 추가
+			mv.addObject("tMap", tMap);
+			mv.addObject("keyword", keyword);
+			
 			mv.setViewName("sSearchPlay");
 		}
 		

@@ -1,5 +1,8 @@
 package com.bob.stepy.service;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +48,7 @@ public class ResService {
 		
 		mv.addObject("store", store);
 		mv.addObject("product", product);
-		mv.addObject("member", member);
+		mv.addObject("m_id", member.getM_id());
 		
 		mv.setViewName("rReservation");
 		
@@ -55,25 +58,107 @@ public class ResService {
 	
 	// 예약
 	@Transactional
-	public ModelAndView reservation(ResTicketDto resTicket, RedirectAttributes rttr) {
-		log.info("reservation()");
+	public ModelAndView reservation(ResTicketDto resTicket, Integer res_plnum, String res_checkindate) {
+		log.info("reservation() pl_num : " + res_plnum);
 		
 		mv = new ModelAndView();
 		
+		int resCnt = rDao.resChecking(res_checkindate, res_plnum);
+		int roomQty = rDao.getProductInfo(res_plnum).getPl_qty();
+		
 		try {
-			rDao.reservation(resTicket);
+			if(resCnt < roomQty) {
+				rDao.reservation(resTicket);
+				StoreDto store = rDao.getStoreName(res_plnum);
+				ProductDto product = rDao.getProductInfo(res_plnum);
+					
+				// 체크인아웃 날짜 차이
+				String checkin = resTicket.getRes_checkindate();
+				String checkout = resTicket.getRes_checkoutdate();
+				
+				SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd");
+
+			    Date FirstDate = format.parse(checkin);
+			    Date SecondDate = format.parse(checkout);
+			        
+			    long calDate = FirstDate.getTime() - SecondDate.getTime(); 
+			        
+			    long calDateDays = calDate / ( 24*60*60*1000); 
+			 
+			    calDateDays = Math.abs(calDateDays);
+			        
+			    // 머무는 일수(몇 박)에 따라 가격 변동
+			    int price = product.getPl_price();
+			    long realPrice = calDateDays * price;
+					
+				mv.addObject("store", store);
+				mv.addObject("product", product);
+				mv.addObject("resTicket", resTicket);
+				mv.addObject("nights", calDateDays);
+				mv.addObject("realPrice", realPrice);
+					
+				mv.addObject("msg", "예약이 완료되었습니다.");
+				mv.setViewName("rReservationConfirm");
+			}
 			
-			mv.setViewName("rReservationConfirm");
-			rttr.addFlashAttribute("message", "예약되었습니다.");
+			else {
+				mv.addObject("msg", "해당 날짜는 예약이 불가능합니다. 다른 날짜를 선택해주세요.");
+				mv.setViewName("rReservation");
+			}
+				
+		} catch (Exception e) {
+			e.printStackTrace();
+				
+			mv.addObject("msg", "예약에 실패했습니다. 다시 예약해주세요.");
+			mv.setViewName("rReservation");
+		}
+		
+		return mv;
+	}
+	
+	
+	// 예약 취소
+	public String resCancle(Integer res_num, RedirectAttributes rttr) {
+		log.info("resCancle() res_num : " + res_num);
+		
+		String view = null;
+		
+		try {
+			rDao.resCancle(res_num);
+			
+			view = "redirect:/";
+			rttr.addFlashAttribute("msg", "예약이 취소되었습니다.");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 			
-			mv.setViewName("rReservation");
-			rttr.addFlashAttribute("message", "예약에 실패했습니다.");
+			view = "redirect:/";
+			rttr.addFlashAttribute("msg", "예약 취소에 실패했습니다.");
 		}
 		
-		return mv;
+		return view;
+	}
+	
+	
+	// 결제하면 예약 상태 1로 바꾸기
+	@Transactional
+	public String upResStatus(Integer res_num, RedirectAttributes rttr) {
+		log.info("upResStatus() res_num : " + res_num);
+		
+		String view = null;
+		
+		try {
+			rDao.upResStatus(res_num);
+			
+			view = "redirect:/";
+			rttr.addFlashAttribute("msg", "결제가 완료되었습니다.");
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			
+		}
+		
+		return view;
 	}
 
 }

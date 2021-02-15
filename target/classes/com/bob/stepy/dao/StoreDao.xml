@@ -27,6 +27,10 @@
 	<select id="getStEncPwd" parameterType="String" resultType="String">
 		SELECT C_PWD FROM C WHERE C_NUM=#{c_num}
 	</select>
+	<!-- c_join값 가져오기 -->
+	<select id="getCjoin" parameterType="String" resultType="String">
+		SELECT C_JOIN FROM C WHERE C_NUM=#{c_num}
+	</select>
 
 	<!-- 로그인 정보 가져오기 -->
 	<select id="getCeoInfo" parameterType="String" resultType="com.bob.stepy.dto.CeoDto">
@@ -45,7 +49,7 @@
 	
 	<!-- 상품 리스트 가져오기 -->
 	<select id="getProdList" parameterType="String" resultType="com.bob.stepy.dto.ProductDto">
-		SELECT * FROM PL WHERE PL_CNUM=#{pl_cnum} ORDER BY PL_NUM DESC
+		SELECT * FROM PL WHERE PL_CNUM=#{pl_cnum} ORDER BY PL_PRICE ASC
 	</select>
 	<!-- 상품 1개 정보 가져오기 -->
 	<select id="getProdInfo" parameterType="Integer" resultType="com.bob.stepy.dto.ProductDto">
@@ -116,10 +120,19 @@
 	<select id="stDeleteThumb" parameterType="String">
 		DELETE FROM F WHERE F_SYSNAME=#{f_sysname}
 	</select>
-	<!-- 가게 사진 불러오기 -->
+	<!-- 가게 추가사진 불러오기 -->
 	<select id="getPhotos" parameterType="String" resultType="com.bob.stepy.dto.FileUpDto">
 		SELECT * FROM F WHERE F_CNUM=#{f_cnum} AND F_THUMB='OTHER'
 	</select>
+	<!-- 스토어 추가사진만 삭제 -->
+	<delete id="stDeletePhotos" parameterType="String">
+		DELETE FROM F WHERE F_CNUM=#{f_cnum} AND F_THUMB='OTHER'
+	</delete>
+	<!-- 삭제할 스토어 추가사진들의 sysname -->
+	<select id="getPtsSys" parameterType="String" resultType="String">
+		SELECT F_SYSNAME FROM F WHERE F_CNUM=#{f_cnum} AND F_THUMB='OTHER'
+	</select>
+	
 	<!-- 미인증 업체 리스트 불러오기 -->
 	<select id="getAuthList" resultType="com.bob.stepy.dto.CeoDto">
 		SELECT * FROM C WHERE C_JOIN='pending'
@@ -145,6 +158,7 @@
 	<select id="stDeleteProd" parameterType="Integer">
 		DELETE FROM PL WHERE PL_NUM=${pl_num}
 	</select>
+	<!-- 상품 추가사진만 삭제 -->
 	<select id="stDeleteProdPhoto" parameterType="Integer">
 		DELETE FROM F WHERE F_PLNUM=${pl_num}
 	</select>
@@ -159,6 +173,19 @@
 		SELECT * FROM F WHERE F_CNUM=#{c_num} AND F_THUMB='AUTH'
 	</select>
 	
+	<!-- 전체 예약 정보 불러오기 -->
+	<select id="stTotalResList" parameterType="Integer" resultType="com.bob.stepy.dto.ResTicketDto">
+		SELECT * FROM RES WHERE RES_PLNUM=${res_plnum} AND RES_STATUS=1
+	</select>
+	<!-- 예약번호-정보 불러오기 -->
+	<select id="getResInfo" parameterType="Integer" resultType="com.bob.stepy.dto.ResTicketDto">
+		SELECT * FROM RES WHERE RES_NUM=${res_num}
+	</select>
+	<!-- 해당 상품번호-이름 가져오기 -->
+	<select id="getPlname" parameterType="Integer" resultType="String">
+		SELECT PL_NAME FROM PL WHERE PL_NUM=${res_plnum}
+	
+	</select>
 	
 </mapper>
 

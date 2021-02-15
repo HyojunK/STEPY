@@ -18,9 +18,36 @@
 
 
 <!-- 예약 -->
+<insert id="reservation" parameterType="com.bob.stepy.dto.ResTicketDto" useGeneratedKeys="true" keyProperty="res_num">
+	<selectKey keyProperty="res_num" resultType="int" order="BEFORE">
+		SELECT RESTICKET_SEQ.NEXTVAL FROM DUAL
+	</selectKey>
+	INSERT INTO RES VALUES (${res_num}, sysdate, #{res_plnum}, #{res_mid}, #{res_name}, #{res_phone},
+		#{res_checkindate}, #{res_checkoutdate}, DEFAULT, DEFAULT)
+</insert>
 
+
+<!-- 상품번호로 가게 정보 가져오기 -->
+<select id="getStoreName" parameterType="Integer" resultType="com.bob.stepy.dto.StoreDto">
+	SELECT * FROM STORE,PRODUCTLIST WHERE S_NUM=PL_CNUM AND PRODUCTLIST.PL_NUM=#{res_plnum}
+</select>
+
+
+<!-- 해당 날짜 예약 여부 -->
+<select id="resChecking" parameterType="map" resultType="Integer">
+	SELECT COUNT(*) FROM RES WHERE RES_CHECKINDATE=#{res_checkindate} AND RES_PLNUM=#{res_plnum}
+</select>
 
 
 <!-- 예약 취소 -->
+<select id="resCancle" parameterType="Integer">
+	DELETE FROM RES WHERE RES_NUM=#{res_num}
+</select>
+
+
+<!-- 결제하면 예약 상태 1로 바꾸기 -->
+<update id="upResStatus" parameterType="Integer">
+	UPDATE RES SET RES_STATUS=1 WHERE RES_NUM=#{res_num}
+</update>
 
 </mapper>

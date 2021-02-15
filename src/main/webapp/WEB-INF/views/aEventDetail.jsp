@@ -42,8 +42,15 @@
 							<td class="col-md-7 col-xs-11 " style="height: 450px;">${event.e_contents}
 								<c:if test="${!empty fList}">
 									<c:forEach var="f" items="${fList}">
-										<img src="resources/upload/${f.f_sysname}" width="300"
-											style="display: block;">
+										<c:if test="${fn:contains(f.f_sysname, '.jpg')}">
+											<img src="resources/upload/${f.f_sysname}" width="250">
+										</c:if>
+										<c:if test="${fn:contains(f.f_sysname, '.png')}">
+											<img src="resources/upload/${f.f_sysname}" width="250">
+										</c:if>
+										<c:if test="${fn:contains(f.f_sysname, '.gif')}">
+											<img src="resources/upload/${f.f_sysname}" width="250">
+										</c:if>
 									</c:forEach>
 								</c:if>
 							</td>

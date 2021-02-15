@@ -28,8 +28,8 @@ public class Paging {
 
 		//전체 페이지 개수에 따라 경우의 수가 달라짐
 		int totalPage = (maxNum % listCnt > 0) ?
-						maxNum/listCnt + 1 :
-						maxNum/listCnt;
+				maxNum/listCnt + 1 :
+					maxNum/listCnt;
 		//EX)글 44개, 한 페이지에 10개를 보여준다면 %==4 T, 4+1페이지가 됨 (T)
 		//글이 50개, 한 페이지에 10개를 보여준다면 %==0 F, 5페이지로 결정됨
 		//100개 > % == 0 F, 10페이지
@@ -38,7 +38,7 @@ public class Paging {
 		//현재 페이지가 속해있는 그룹 번호
 		int curGroup = (pageNum % pageCnt > 0) ?
 				pageNum/pageCnt + 1 :
-				pageNum/pageCnt;
+					pageNum/pageCnt;
 		//페이지 10개를 보여준다는 전제조건의 경우 (pageCnt=10)
 		//1번 페이지의 경우 1 % 10>0 T = curGroup = 0+1 = 그룹 1
 		//5번 페이지의 경우 5 % 10>0 T = 0+1 = 그룹 1
@@ -130,5 +130,72 @@ public class Paging {
 	}
 
 
+
+	public String makePageBtnForMulti() {
+		numbers();
+		log.info("한 페이지에서 보여줄 글 수 listCnt : "+listCnt +"(서비스 클래스에서 정했음)");
+
+		int totalPage = (maxNum % listCnt > 0) ?
+				maxNum/listCnt + 1 :
+					maxNum/listCnt;
+
+		log.info("총 페이지 수 totalPage : "+totalPage);
+
+
+		int curGroup = (pageNum % pageCnt > 0) ?
+				pageNum/pageCnt + 1 :
+					pageNum/pageCnt;
+
+		log.info("현재 페이지 번호 pageNum : "+pageNum);
+		log.info("현재 페이지의 소속 그룹 curGroup : "+curGroup);
+
+
+		StringBuffer sb = new StringBuffer();
+
+
+		int start = (curGroup * pageCnt) - (pageCnt-1);
+
+		log.info("페이지의 시작 번호 start : "+start);
+
+
+		int end =  (curGroup * pageCnt >= totalPage) ?
+				totalPage : curGroup * pageCnt;
+
+
+		if (start != 1) {
+			sb.append("<a class='pno' href='" + listName
+					+"pageNum=" + (start - 1) + "'>");
+			sb.append("&nbsp;이전&nbsp;");
+			sb.append("</a>");
+			//<a class='pno' href="list?pageNum5'>이전</a>와 같음
+		}
+
+		for (int i = start; i <= end; i++) {
+			if(pageNum != i) {
+
+				sb.append("<a class='pno' href='"+listName+
+						"pageNum="+i+"'>");
+				sb.append("&nbsp;"+i+"&nbsp;</a>");
+				//
+
+			}
+			else {
+				//pageNum==i, 현재 페이지로 판단, 링크를 걸지 않음
+				sb.append("<font class='pno' style='color:red;'>");
+				sb.append("&nbsp;"+i+"&nbsp;</font>");
+			}
+
+		}
+
+		if (end != totalPage) {
+			sb.append("<a class='pno' href='" + listName +
+					"pageNum=" + (end + 1) + "'>");
+			sb.append("&nbsp;다음&nbsp;</a>");
+
+		}//다음 버튼 처리 if 끝
+
+		//어펜드로 추가되어가면서 쌓인 문자열 조각들을 하나로 합쳐 완성된 문자열로 취급
+		return sb.toString();
+	}//makePaging 메소드 끝
 
 }//페이징 클래스 끝

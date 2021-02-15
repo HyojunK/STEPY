@@ -27,7 +27,7 @@ public interface SearchDao {
 	public StoreDto getStoreInfo(String c_num);
 	
 	// 가게 썸네일 가져오기
-	public List<FileUpDto> getThumbnail(String c_num);
+	public FileUpDto getThumbnail(String c_num);
 	
 	/* ***** */
 	

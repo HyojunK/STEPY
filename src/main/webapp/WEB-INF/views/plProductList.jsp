@@ -110,7 +110,7 @@
 	font-size: 20px;
 	font-weight: normal;	
 }
-.review {
+#review {
 	border: 1px solid #EEEEEE;
 	border-radius: 5px;
 	padding: 50px;
@@ -259,7 +259,7 @@ a:visited {
 
 
 		<!-- 후기 -->
-		<div class="container center-block review" style="width: 900px;">
+		<div class="container center-block" id="review" style="width: 900px;">
 			<div class="reviewTitle">후기</div>
 			<div class="reviewRating">
 				<span class="glyphicon glyphicon-star reviewStar"></span>

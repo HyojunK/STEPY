@@ -17,8 +17,7 @@
 .btn {
 	background-color: #5983D9;
 	color: white;
-	width: 40%;
-	margin: 3px;
+	width: 100%;
 }
 .btn-color1 {
 	background-color: #F2B950;
@@ -73,15 +72,15 @@ $(function(){
   				<a class="dropdown-toggle" data-toggle="dropdown" href="./stMyPage" role="button" aria-expanded="false">내 정보 관리
   					<span class="caret"></span></a>
   				<ul class="dropdown-menu" role="menu">
-  					<li><a href="./stMyThumb">가게 썸네일 관리하기</a></li>
-  					<li><a href="./stExtraPhoto">가게 사진 추가하기</a></li>
+  					<li><a href="./stMyThumb">스토어 대표사진 관리하기</a></li>
+  					<li><a href="./stExtraPhoto">스토어 사진 추가하기</a></li>
   					<li><a href="./stModifyInfoFrm">내 정보 변경하기</a></li>
   				</ul>
   			</li>
   			<li role="presentation"><a href="./stMyProd">내 상품 관리</a></li>
   			<li role="presentation"><a href="./stResList">예약 현황 보기</a></li>
-  			<li role="presentation"><a href="./stReviewList">가게 후기 보기</a></li>
-  			<li role="presentation"><a href="./stReportList">가게 신고 보기</a></li>
+  			<!-- <li role="presentation"><a href="./stReviewList">가게 후기 보기</a></li>
+  			<li role="presentation"><a href="./stReportList">가게 신고 보기</a></li>  -->
 		</ul>
 		
 		<div class="container center-block" style="width: 60%;">
@@ -166,7 +165,7 @@ $(function(){
 				<tr>
 					<td colspan="2" style="text-align: center; height: 90px;">
 						<button type="submit" class="btn btn-color1" onclick="location.href='./stModifyPwdFrm'">비밀번호 변경하기</button>   						
-   						<button type="submit" class="btn btn-color2">탈퇴하기</button>
+   						<!-- <button type="submit" class="btn btn-color2">탈퇴하기</button>  -->
 					</td>
 				</tr>									
 			</table>

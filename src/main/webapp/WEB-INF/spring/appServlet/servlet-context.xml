@@ -32,5 +32,33 @@
          value="10000000"/>   
       </beans:bean>
 	
+	<interceptors>
+		<interceptor>
+			<mapping path="/**"/>
+				<exclude-mapping path="/"/>
+				<exclude-mapping path="/mGetAuthorizationUrl"/>
+				<exclude-mapping path="/kakaoLogin"/>
+				<exclude-mapping path="/kakaoLogInProc"/>
+				<exclude-mapping path="/mJoinFrm"/>
+				<exclude-mapping path="/mJoinProc"/>
+				<exclude-mapping path="/mIdDuplicationCheck"/>
+				<exclude-mapping path="/mAuthMail"/>
+				<exclude-mapping path="/mLoginFrm"/>
+				<exclude-mapping path="/mLoginProc"/>
+				<exclude-mapping path="/stHome"/>
+				<exclude-mapping path="/stJoinFrm"/>
+				<exclude-mapping path="/stJoinProc"/>
+				<exclude-mapping path="/stIdCheck"/>
+				<exclude-mapping path="/stLoginProc"/>
+				<exclude-mapping path="/aLoginFrm"/>
+				<exclude-mapping path="/aHome"/>
+				<exclude-mapping path="/bCommunity"/>
+				<exclude-mapping path="/bReviewList"/>
+				<exclude-mapping path="/bFreeList"/>
+				<exclude-mapping path="/bMateList"/>
+				<exclude-mapping path="/resources/**"/>
+				<beans:bean class="com.bob.stepy.util.SessionInterceptor"/>
+		</interceptor>
+	</interceptors>
 	
 </beans:beans>

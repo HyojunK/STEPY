@@ -10,7 +10,7 @@ String mail_tgt = request.getParameter("mail_tgt");
 <div class="row">
 	<jsp:include page="aSideBar.jsp" />
 	<div class="formArea col-sm-10" align="center">
-		<form action="aSendMemberMail" method="post">
+		<form action="aSendMemberMail" method="post" enctype="multipart/form-data">
 			<fieldset>
 				<legend>이메일</legend>
 				<input type="text" value="모든 <%=mail_tgt%> 회원에게 발송됩니다" class="tgt"

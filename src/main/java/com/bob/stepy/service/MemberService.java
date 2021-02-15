@@ -9,6 +9,7 @@ import java.net.*;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,12 @@ import javax.mail.*;
 import javax.mail.PasswordAuthentication;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionBindingListener;
 
+import org.apache.catalina.manager.util.SessionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -33,19 +38,30 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.bob.stepy.dao.MemberDao;
 import com.bob.stepy.dto.FileUpDto;
+import com.bob.stepy.dto.MailDto;
 import com.bob.stepy.dto.MemberDto;
 import com.bob.stepy.dto.MemberKaKaoTokenDto;
 import com.bob.stepy.dto.MemberKakaoProfileDto;
+import com.bob.stepy.dto.MemberPaymentDto;
+import com.bob.stepy.dto.MemberPostDto;
 import com.bob.stepy.dto.MessageDto;
+import com.bob.stepy.dto.PostDto;
+import com.bob.stepy.dto.PostDto2;
+import com.bob.stepy.dto.ResTicketDto;
+import com.bob.stepy.util.Paging;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.java.Log;
+
+@Log
 @Service
 public class MemberService {
 
@@ -56,18 +72,12 @@ public class MemberService {
 	private MemberDao mDao;
 	@Autowired
 	private HttpSession session;
-	
+
 	private ModelAndView mv;
 
 	//_______________
 
 
-
-	public String mKakaoAutho() {
-
-		String kakaoUrl = "https://kauth.kakao.com/oauth/authorize?" + "client_id=" + restApi + "&redirect_uri=" + redirect_uri + "&response_type=code"; 
-		return kakaoUrl;
-	}
 
 
 
@@ -157,24 +167,19 @@ public class MemberService {
 			e.printStackTrace();
 		}
 
-
-		System.out.println("kakao Id : "+kakaoProfile.getId());
-		System.out.println("kakao email : "+kakaoProfile.getKakao_account().getEmail());
-		System.out.println("The format of user id fot stepy is "+kakaoProfile.getKakao_account().getEmail()+"_"+kakaoProfile.getId());
-		System.out.println("The format of user enamil for stepy is "+kakaoProfile.getKakao_account().getEmail());
-		System.out.println("Nickname and user name have the same value for deafult set");
-
+		System.out.println("The format of user id for stepy is "
+				+kakaoProfile.getKakao_account().getEmail()+"_"+kakaoProfile.getId());
 
 		String idPreCheck = kakaoProfile.getKakao_account().getEmail()+"_"+kakaoProfile.getId();
-		String dbCheckResult = mIdDuplicationCheck(idPreCheck);
+
 		MemberDto memberDto = new MemberDto();
 
 		if(kakaoProfile.getKakao_account().getEmail() == "" || kakaoProfile.getKakao_account().getEmail() == null) {
 			memberDto.setM_email("no_email_detected");
-			System.out.println("emial null is detected");
-			System.out.println("email null memberDto is : "+ memberDto);
 			return memberDto;
 		}
+
+		String dbCheckResult = mIdDuplicationCheck(idPreCheck);
 
 		if(dbCheckResult == "0") {
 			memberDto.setM_id(kakaoProfile.getKakao_account().getEmail()+"_"+kakaoProfile.getId());
@@ -182,11 +187,11 @@ public class MemberService {
 			memberDto.setM_name(kakaoProfile.getKakao_account().getProfile().getNickname());
 			memberDto.setM_nickname(kakaoProfile.getKakao_account().getProfile().getNickname());
 			memberDto.setM_pwd("mustbekeptwithoutanyleak11!!");//default password for users who logged in from kakaotalk
-		
+
 			try {
 				mJoinProc(memberDto);
 				mKakaoProfileUp(kakaoProfile);
-	
+
 			}catch(Exception e){
 				System.out.println("mKakaoProfileRequest Member insult failure" );
 			}
@@ -194,11 +199,8 @@ public class MemberService {
 		}
 		else {
 			memberDto = mDao.getMemeberInfo(idPreCheck);
-			
-			System.out.println("alread singed up member : "+memberDto);
-			
-		}
 
+		}
 
 		return memberDto;
 	}
@@ -215,18 +217,14 @@ public class MemberService {
 
 
 		ResponseEntity<String> response = rt.exchange(
-				
+
 				"https://kapi.kakao.com/v1/user/unlink",
 				HttpMethod.POST,
 				forDisconnection,
 				String.class
 				);
-
-		System.out.println(response.getBody());
-
-
-
 	}
+
 
 	@Transactional
 	public void mKakaoProfileUp(MemberKakaoProfileDto profile) throws IOException{
@@ -254,17 +252,15 @@ public class MemberService {
 
 		FileOutputStream fileOS = new FileOutputStream(fileName);
 		FileChannel writeChannel = fileOS.getChannel();
-		
+
 		writeChannel.transferFrom(readChannel, 0, Long.MAX_VALUE);
-		
-		
+
 		FileUpDto fileDto = new FileUpDto();
 		fileDto.setF_oriname(oriName);
 		fileDto.setF_sysname(sysName);
 		fileDto.setF_mnum(userid);
-		
-		System.out.println(fileDto);
-		
+
+
 		mDao.mKakaoThumbUpload(fileDto);
 
 	}
@@ -297,21 +293,22 @@ public class MemberService {
 		}
 
 		try {
-			
-			mOnceCreateProfil();
-			
+
+			mOnceCreateProfile();
+
 			mDao.memberInsert(member);
-			
+
 			String sysName = System.currentTimeMillis() + "_profile.png";
 			String oriName = "stepydefaultprofile.png";
-			
+
 			FileUpDto fileDto = new FileUpDto();
 			fileDto.setF_oriname(oriName);
 			fileDto.setF_sysname(sysName);
 			fileDto.setF_mnum(member.getM_id());
-				
+
 			mDao.mThumbUpload(fileDto);
-		
+			//mShutFirstMsg(member.getM_id());
+
 			path="redirect:/";
 		}catch(Exception e) {
 			path="redirect:mJoinFrm";
@@ -322,7 +319,7 @@ public class MemberService {
 	}
 
 
-	private void mOnceCreateProfil() {
+	private void mOnceCreateProfile() {
 
 		String dirpath = session.getServletContext().getRealPath("/");
 		String loadpath = dirpath + "resources/images/";
@@ -330,16 +327,13 @@ public class MemberService {
 
 		File fork = new File(destpath + "stepydefaultprofile.png");
 		if (fork.exists()) {
-			
-			System.out.println("already existing file");	
 			return;
 		}
 		File dir = new File(destpath);
 		if(dir.isDirectory() == false) {
 			dir.mkdir();
-			System.out.println("Created profile folder ");
 		}
-		
+
 		File folderInput = new File(loadpath+"stepydefaultprofile.png");
 		try {
 			BufferedImage image = ImageIO.read(folderInput);
@@ -360,14 +354,13 @@ public class MemberService {
 		int i = mDao.duplicationCheck(tempid);
 		if (i == 1) {
 			msg="1";
-			//"이미 존재하는 아이디입니다. 다른 아이디를 선택해주세요 (already existing id. select another, please)";
+			//"이미 존재하는 아이디입니다. 다른 아이디를 선택해주세요 (already existing id)";
 		}else {
 			msg = "0";
 			//"사용가능한 아이디입니다. (usable id)";
 		}
 
 		return msg;
-
 	}
 
 
@@ -377,17 +370,16 @@ public class MemberService {
 		String encryptPass = mDao.getEncryptizedPass(member.getM_id());
 
 		BCryptPasswordEncoder pwdEncoder = new BCryptPasswordEncoder();		
-		
+
 		if(encryptPass != null) {
 			if(pwdEncoder.matches(member.getM_pwd(), encryptPass)) {
 
 				member = mDao.getMemeberInfo(member.getM_id());
 				session.setAttribute("member", member);
 				path = "redirect:/";
-							
-				
+
 			}else {
-				// right id, but pass typo
+				// right id, but pwd typo
 				path="redirect:mLoginFrm";
 				rttr.addFlashAttribute("loginMsg", "비밀번호 입력 오류");
 				rttr.addFlashAttribute("resultNum", "1");
@@ -414,220 +406,374 @@ public class MemberService {
 
 
 	public ModelAndView mMyPage() {
-		
+
 		MemberDto member = (MemberDto)session.getAttribute("member");
 		System.out.println(member);
 		String userid = member.getM_id();
 		mv = new ModelAndView();
-		
-		// 아 생각해보니까 이거 위험한데, 절대절대절대, 파일업로드할때 프로필 사진 아닌 이상 회원 아이디로 외래키 넣기 없는걸로. 
+
 		FileUpDto profile = mDao.mGetProfile(userid);
 		System.out.println(profile);
 		mv.addObject("profile", profile);
 		mv.setViewName("mMyPage");
-		
+
 		return mv;
 	}
 
 
 
-	public Map<String, String> mAuthMail(String mailaddr) {
-		
+	public Map<String, String> mAuthMail(String mailaddr, MailDto mail) {
+
 		Map<String, String> map = new HashMap<>();
-		
-		if(mailaddr.contains("@naver.com") || mailaddr.contains("@gmail.com")) {
 
-			final String user = "stepy.tester@gmail.com";
-			final String password = "stepy1234!";
-			final String host ="smtp.gmail.com";// "smtp.naver.com";
-			int port = 587;
-			final String to = mailaddr;
+		final String user = "stepy.tester@gmail.com";
+		final String password = "stepy1234!";
+		final String host ="smtp.gmail.com";// "smtp.naver.com";
+		int port = 587;
+		final String to = mailaddr;
 
-			Properties prop = new Properties();
 
-			prop.put("mail.smtp.auth", "true");
-			prop.put("mail.smtp.starttls.enable","true");
-			prop.put("mail.smtp.host", host);
-			prop.put("mail.smtp.port", port);
-			
-			Session mailsession = Session.getInstance(prop, 
-					new javax.mail.Authenticator() {
-					protected PasswordAuthentication getPasswordAuthentication() {
-						return new PasswordAuthentication(user, password);
-					}
-			});
-			
-			
-			//random
-			Random random = new Random();
-			String authkey = "";
-			
-			for(int i = 0; i<3 ; i++) {
-				int rand_char = random.nextInt(26)+65;
-				authkey += (char)rand_char;
+		Properties prop = new Properties();
+
+		prop.put("mail.smtp.auth", "true");
+		prop.put("mail.smtp.starttls.enable","true");
+		prop.put("mail.smtp.host", host);
+		prop.put("mail.smtp.port", port);
+
+		Session mailsession = Session.getInstance(prop, 
+				new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(user, password);
 			}
-			
-			int rand_int = random.nextInt(9000)+1000 ;
-			authkey += rand_int;
-			
-			try {
-				Message message = new MimeMessage(mailsession);
-				message.setFrom(new InternetAddress(user));
-				message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
-				message.setSubject("STEPY 회원가입 인증메일입니다");
-				message.setText("인증번호를 입력해주세요\n"+authkey);
-				Transport.send(message);
-				System.out.println("Sent a key , which is : " + authkey);
-			}catch(Exception e) {
-				throw new RuntimeException(e);
-			}
-			
-			map.put("msg","메일함에서 인증번호를 확인해주세요." );
-			map.put("authkey",authkey);
-				
-		}else {
-			map.put("msg","지원하지 않는 이메일 형식입니다. naver 혹은 google 메일을 사용해주세요.");
+		});
+
+
+		//random
+		Random random = new Random();
+		String authkey = "";
+
+		for(int i = 0; i<3 ; i++) {
+			int rand_char = random.nextInt(26)+65;
+			authkey += (char)rand_char;
 		}
-		
-		return map;
-		
-	}
 
+		int rand_int = random.nextInt(9000)+1000 ;
+		authkey += rand_int;
+
+		try {
+			Message message = new MimeMessage(mailsession);
+			message.setFrom(new InternetAddress(user));
+			message.setRecipients(Message.RecipientType.TO, 
+					InternetAddress.parse(to));
+			message.setSubject(mail.getSetSubject());
+			message.setText(mail.getSetText()+authkey);
+			Transport.send(message);
+			log.info("Sent a key , which is : " + authkey);
+		}catch(Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		map.put("msg","success");
+		map.put("authkey",authkey);
+
+		return map;
+
+	}
 
 
 	@Transactional
 	public ModelAndView mModifyMyinfo() {
-		
+
 		mv = new ModelAndView();
 		MemberDto member = (MemberDto)session.getAttribute("member");
 		FileUpDto profile = mDao.mGetProfile(member.getM_id());
-		
+
 		mv.addObject("profile", profile);
 		mv.setViewName("mModifyMyinfo");
-		
+
 		return mv;
-		
+
 	}
-	
 
 
-	public ModelAndView mMyLittleBlog(String blog_id) {
-		
+	public ModelAndView mMyLittleBlog(String blog_id, Integer sort) {
+
+		int sortnum = (sort == null) ? 1:sort;
+
 		mv = new ModelAndView();
-		
+
 		FileUpDto profile = mDao.mGetProfile(blog_id);
 		mv.addObject("hostprofile", profile);
 		MemberDto member = mDao.getMemeberInfo(blog_id);
 		mv.addObject("hostaccount", member);
-		
+
+		if(sortnum == 1) {
+			List<MemberPostDto> mpListori = mDao.mGetMyPostList(blog_id);
+			List<MemberPostDto> mpList = new ArrayList<MemberPostDto>();
+
+			int round = mpListori.size();
+
+			for(int i = 0;  i < round;  i++ ) {
+				int j = 1;
+				int limit = round - (round - j);
+
+				MemberPostDto mp1 = mpListori.get(i);
+
+				MemberPostDto mp2 = mpListori.get(limit);	
+				if(mp1.getP_num() != mp2.getP_num()) {
+					if(i == 0) {
+						mpList.add(mp1);
+					}else {
+						mp2 = mpListori.get(i-1); //실상 mp0
+						if(mp1.getP_num() != mp2.getP_num()) {
+							mpList.add(mp1);
+						}
+					}
+				}else if(mp1.getP_num() == mp2.getP_num()) {
+					if(i == 0) {
+						mpList.add(mp1);
+					}else {
+						mp2 = mpListori.get(i-1);
+						if(mp1.getP_num() != mp2.getP_num()) {
+							mpList.add(mp1);
+						}
+					}
+				}
+				j++;
+			}
+			mv.addObject("mpList", mpList);
+			mv.addObject("sort",1);
+		}
+		else {
+			List<MemberPostDto> mrListori = mDao.mGetMyReplyList(blog_id);
+			List<MemberPostDto> mrList = new ArrayList<MemberPostDto>();
+
+			int round = mrListori.size();
+
+			for(int i = 0;  i < round;  i++ ) {
+				int j = 1;
+				int limit = round - (round - j);
+
+				MemberPostDto mp1 = mrListori.get(i);
+
+				MemberPostDto mp2 = mrListori.get(limit);	
+				if(mp1.getP_num() != mp2.getP_num()) {
+					if(i == 0) {
+						mrList.add(mp1);
+					}else {
+						mp2 = mrListori.get(i-1); //실상 mp0
+						if(mp1.getP_num() != mp2.getP_num()) {
+							mrList.add(mp1);
+						}
+					}
+				}else if(mp1.getP_num() == mp2.getP_num()) {
+					if(i == 0) {
+						mrList.add(mp1);
+					}else {
+						mp2 = mrListori.get(i-1);
+						if(mp1.getP_num() != mp2.getP_num()) {
+							mrList.add(mp1);
+						}
+					}
+				}
+				j++;
+			}
+			mv.addObject("mrList", mrList);
+			mv.addObject("sort",2);
+		}
 		return mv;
 	}
 
 
 	private void mShutFirstMsg(String m_id) {
-		
+		System.out.println("여기 들어오긴 했니..?");
 		MessageDto msg = new MessageDto();
-		
+
 		msg.setMs_mid(m_id);
 		msg.setMs_smid("admin");
 		msg.setMs_contents("안녕하세요! Stepy와 함께 전국 방방 곳곳! 발도장을 찍어볼까요? 여행 일정을 짜고, 동행인을 구하고, 소통하고 즐겨봐요!");
 		msg.setMs_bfread(1);
 		msg.setMs_afread(0);
-		
+
 		mDao.mSetMessage(msg);
-		
+
 	}
+
+
+	@Transactional
+	public void mModifyProc(MemberDto member, RedirectAttributes rttr) {
+
+		String msg;
+
+		if(member.getM_nickname() == "" && member.getM_nickname() == null) {
+			msg = "닉네임을 입력해주세요";
+			rttr.addFlashAttribute("msg",msg);
+			return;
+		}
+
+		String realaddr;
+
+		if(member.getAddress_without_specific() != "" && member.getAddress_without_specific() != null ) {
+			if(member.getAddress_with_specific() !="") {
+				realaddr = member.getAddress_without_specific() +" "+ member.getAddress_with_specific();
+				member.setM_addr(realaddr);
+			}
+			else if(member.getAddress_with_specific()== ""){
+				realaddr = member.getAddress_without_specific();
+				member.setM_addr(realaddr);
+			}
+		}
+
+		mDao.mModifyUserInfo(member);	
+		session.setAttribute("member", member);
+
+		msg = "변경사항이 저장되었습니다!";
+		rttr.addFlashAttribute("msgFromModify", msg);
+
+		return;
+	} 
 
 
 
 	public ModelAndView mSendMessage(String toid, String fromid) {
-		
+		log.info("toid is..."+toid+ " And from id is My id : "+fromid);  
 		mv = new ModelAndView();
 
 		MemberDto guest = mDao.getMemeberInfo(fromid);
 		mv.addObject("guest", guest);
-		
+
 		MemberDto host = mDao.getMemeberInfo(toid);
+		System.out.println("Testing if host is null or not "+host);
 		mv.addObject("host", host);
-		
+
+		mv.setViewName("mSendMessage");
+
 		return mv;
 	}
 
 
 	@Transactional
 	public String mSendMessageProc(MessageDto msg, RedirectAttributes rttr) {
-		
+
 		mv = new ModelAndView();
-		
+		String path;
+
 		String ms_mid = msg.getMs_mid();
 		String ms_smid = msg.getMs_smid();
+
+		if(mDao.duplicationCheck(ms_mid) == 0) {
+			log.info("please work please");
+			rttr.addAttribute("fromid", ms_smid);
+			rttr.addAttribute("toid", "");
+			rttr.addFlashAttribute("nouserfound", "존재하지 않는 유저입니다!");
+			return "redirect:mSendMessage";
+
+		}
+
 		MessageDto before = mDao.mGetBfMsg(ms_mid);
 
 		if(before == null) {
 			msg.setMs_bfread(1);
 			msg.setMs_afread(0);
 			mDao.mSetMessage(msg);
-			
+
 		}else {
 			msg.setMs_bfread(before.getMs_bfread()+1);
 			msg.setMs_afread(before.getMs_afread());
 
 			mDao.mSetMessage(msg);
 		}
-		
 
-		rttr.addAttribute("ms_smid", ms_smid);
-		
+
+		rttr.addAttribute("hostid", ms_smid);
+
 		//List<MessageDto> smList = mDao.mGetMsgList(ms_mid);
 		//MessageDto md1 = smList.get(0);
 		//System.out.println(md1);
-		
-		return "redirect:mMeSendOverview";
+
+		path= "redirect:mMeSendOverview";
+
+		return path;
 	}
 
 
 
-	public ModelAndView mMeSendOverview(String ms_smid) {
-		
+	public ModelAndView mMeSendOverview(String hostid, Integer pageNum) {
+
 		mv = new ModelAndView();
-		List<MessageDto> smList = mDao.mGetSendList(ms_smid);
+
+		String link = "./mMeSendOverview?hostid="+hostid+"&";
+		int num = (pageNum == null) ? 1 : pageNum;
+
+		List<MessageDto> smList = mDao.mGetSendList(hostid, num);
+		int forMaxNum = mDao.mCountSendMsg(hostid);
+
 		mv.addObject("smList", smList);
+		mv.addObject("paging", getPaging(forMaxNum, 5, 5, hostid, num, link));
+
 		mv.setViewName("mMeSendOverview");
-		
+
 		return mv;
 	}
 
 
 
-	public ModelAndView mReceiveOverview(String hostid) {
+	public ModelAndView mReceiveOverview(String hostid, Integer pageNum) {
 
 		mv = new ModelAndView();
-		List<MessageDto> rmList = mDao.mGetReceiveList(hostid);
+		System.out.println("pageNum is " + pageNum + " ( null is expected)");
+
+		String link = "./mReceiveOverview?hostid="+hostid+"&";
+		int num = (pageNum == null) ? 1 : pageNum;
+
+		List<MessageDto> rmList = mDao.mGetReceiveList(hostid, num);
+		int forMaxNum = mDao.mCountReceivedMsg(hostid);
+
 		mv.addObject("rmList", rmList);
+
+		mv.addObject("paging", getPaging(forMaxNum, 5, 5, hostid,num,link));
+		session.setAttribute("pageNum", num);
+
 		mv.setViewName("mReceiveOverview");
-		
+
 		return mv;
 	}
 
+	private String getPaging(int forMaxNum , int listC, int pageC, String hostid, int num, String link){
+
+		int maxNum = forMaxNum;
+		int listCnt = listC;
+		int pageCnt = pageC;
+		String linkName = link;
+
+		Paging paging = new Paging(maxNum, num, listCnt, pageCnt, linkName);
+
+		String pageTag = paging.makePageBtnForMulti();
+
+		return pageTag;
+	}
 
 
 	public MessageDto mNewMsgCount(String ms_mid) {
-		
-		 MessageDto fork = mDao.mGetBfMsg(ms_mid);
-		 MessageDto msg = new MessageDto();
-		 if(fork == null) {
-			 msg.setMs_bfread(0);
-			 msg.setMs_afread(0);
-			 System.out.println("hope no problem" + msg);
-		 }
-		 
+
+		MessageDto fork = mDao.mGetBfMsg(ms_mid);
+		MessageDto msg = new MessageDto();
+		if(fork == null) {
+			msg.setMs_bfread(0);
+			msg.setMs_afread(0);
+			System.out.println("hope no problem" + msg);
+		}else {
+			msg = fork;
+		}
+
+
 		return msg;
 	}
 
 
-
+	@Transactional
 	public void mUploadAfterView(String ms_mid) {
-		
+
 		MessageDto msg = mDao.mGetBfMsg(ms_mid);
 		if(msg == null) {
 			return;
@@ -639,8 +785,192 @@ public class MemberService {
 	}
 
 
+	@Transactional
+	public String mProfileUpdate(MultipartFile multi) {
+
+		String msg;
+
+		if(multi.isEmpty()) {
+			msg = "선택된 파일 없음";
+
+			return msg;
+		}
+
+		MemberDto member = (MemberDto)session.getAttribute("member");
+		String dirpath = session.getServletContext().getRealPath("/");
+		dirpath += "resources/profile/";
+
+		String oriname = multi.getOriginalFilename();
+		String sysname = System.currentTimeMillis() + oriname.substring(oriname.lastIndexOf("."));
+		System.out.println(sysname);
+
+		File file = new File(dirpath + oriname);
+
+		try {
+			multi.transferTo(file);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
+		msg = "프로필 사진 변경 완료";
+
+		FileUpDto fileDto  = new FileUpDto();
+		fileDto.setF_oriname(oriname);
+		fileDto.setF_sysname(sysname);
+		fileDto.setF_mnum(member.getM_id());
+		System.out.println(fileDto);
+
+		mDao.mKakaoThumbUpload(fileDto);
+
+		return msg; 
+	}
+
+
+
+	public Map<String, List<MessageDto>> mRetrieveByContents(String contents, String m_id) {
+
+		MessageDto msg = new MessageDto();
+		Map<String, List<MessageDto>> map = new HashMap<>();
+
+		msg.setMs_contents(contents);
+		msg.setMs_mid(m_id);
+
+		List<MessageDto> searchList = mDao.mRetrieveByContents(msg);
+
+		map.put("searchList", searchList);
+
+
+		return map;
+	}
+
+
+
+	public Map<String, List<MessageDto>> mRetrieveByUsername(String userid, String m_id) {
+
+		MessageDto msg = new MessageDto();
+		msg.setMs_smid(userid);
+		msg.setMs_mid(m_id);
+		List<MessageDto> searchList = mDao.mRetrieveByUsername(msg);
+
+		Map<String, List<MessageDto>> map = new HashMap<>();
+		map.put("searchList", searchList);
+
+		return map;
+
+	}
+
+
+
+	public String mGetCrypPwd(String pwd, String m_id){
+
+		String set;
+
+		BCryptPasswordEncoder pwdEncrypt = new BCryptPasswordEncoder();
+
+		String userInput = pwd;
+
+		String cryptFromDB = mDao.getEncryptizedPass(m_id);
+
+		if(pwdEncrypt.matches(userInput, cryptFromDB)){
+
+			set = "1";
+		}else{
+			set = "0";
+		}
+
+		return set;
+	}
+
+	public String mUpdatePwd(String m_pwd, String m_id) {
+
+		BCryptPasswordEncoder pwdEncrypt = new BCryptPasswordEncoder();
+
+		m_pwd = pwdEncrypt.encode(m_pwd);
+		mDao.mUpdatePwd(m_pwd, m_id);
+		String msg = "success";
+
+		return msg;
+	}
+
+
+
+	public ModelAndView mGetMyCartItems() {
+
+		MemberDto member = (MemberDto)session.getAttribute("member");
+
+		List<FileUpDto> cartList = mDao.mMyCartItems(member.getM_id());
+
+		mv = new ModelAndView();
+
+		mv.addObject("cartList", cartList);
+		mv.setViewName("mMyCartPages");
+
+		return mv;
+	}
+
+
+
+	public ModelAndView mMyLikedPages(Integer pageNum) {
+
+		int num = (pageNum == null) ? 1 : pageNum;
+		String link = "./mMyLikedPages?";
+
+		mv = new ModelAndView();
+		MemberDto member = (MemberDto)session.getAttribute("member");
+		String userid = member.getM_id();
+
+		int forMaxNum = mDao.mGetWholeLiked(userid);
+		List<PostDto> likedPost = mDao.mGetLikedPost(userid, num);
+
+		mv.addObject("pList", likedPost);
+
+		mv.addObject("paging", getPaging(forMaxNum, 10, 10, userid, num, link));
+
+		session.setAttribute("paging", num);
+
+		mv.setViewName("mMyLikedPages");
+
+		return mv;
+	}
+
+
+
+	public ModelAndView mMyPayment(Integer sort) {
+
+		int sortnum = (sort == null) ? 1 : sort;
+		mv = new ModelAndView();
+
+		MemberDto member = (MemberDto)session.getAttribute("member");
+		if(sortnum == 1) {
+			List<MemberPaymentDto> ticket = mDao.mGetPayPendingList(member.getM_id());
+
+			mv.addObject("sort", sortnum);
+			mv.addObject("tkList", ticket);
+		}else {
+			List<MemberPaymentDto> ticket = mDao.mGetPaidList(member.getM_id());
+			mv.addObject("sort", sortnum);
+			mv.addObject("tkList", ticket);
+		}
+
+		mv.setViewName("mMyPayment");
+
+		return mv;
+	}
+
+
+	public void mPaiedInFull(Integer resnum) {
+
+		mDao.mUpdateToPaidStatement(resnum);
+
+		return;
+	}
+
+
+
+
 
 
 
 
 }
+
+

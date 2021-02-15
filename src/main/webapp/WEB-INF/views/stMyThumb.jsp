@@ -113,7 +113,6 @@ function del(sysname){
 	if(con){
 		var sysname = "${stThumb.f_sysname}"
 		var objdata = {"f_sysname":sysname};
-		objdata.f_cnum = ${ceo.c_num};
 		console.log(objdata);
 		
 		$.ajax({

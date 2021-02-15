@@ -48,13 +48,13 @@
 	width: 250px;
 	height: 200px;
 	border-radius: 5px;
-	
 }
-.glyphicon-star-empty {
+.star {
 	color: #F2B950;
+	width: 16px;
 }
 .ratingValue {
-	font-size: 15px;
+	font-size: 17px;
 	margin-left: 10px;
 }
 </style>
@@ -90,34 +90,38 @@
 		<!-- 검색 결과 출력 -->
 		<div class="container">
 			<c:if test="${empty sList}">
-				<div class="container">해당 가게가 없습니다.s</div>
+				<div class="container">해당 가게가 없습니다.</div>
 			</c:if>
 			<c:if test="${!empty sList}">
-				<c:forEach var="s" items="${sList}">
+				<c:forEach var="t" items="${tMap}">
 					<div class="container searchRes">
-						<a href="plProductList?c_num=${s.s_num}">
+						<a href="plProductList?c_num=${t.value.s_num}">
 							<div class="media">
 								<div class="media-left">
-									<c:if test="">
-										<img src="resources/upload/" >
+									<c:if test="${fn:contains(t.key, '.jpg')}">
+										<img src="resources/upload${t.key}" class="storeImg">
 									</c:if>
 									
-									<c:if test="">
-										<img src="resources/upload/">
+									<c:if test="${fn:contains(t.key, '.png')}">
+										<img src="resources/upload${t.key}" class="storeImg">
+									</c:if>
+									
+									<c:if test="${fn:contains(t.key, '.jpeg')}">
+										<img src="resources/upload${t.key}" class="storeImg">
 									</c:if>
 								</div>
 								<div class="media-body">
-									<h4 class="media-heading">${s.s_name}</h4>
+									<h4 class="media-heading">${t.value.s_name}</h4>
 									<div class="storeRate">
-										<span class="star" data-rate="${s.s_rate}">
-											<span class="glyphicon glyphicon-star-empty"></span>
-											<span class="glyphicon glyphicon-star-empty"></span>
-											<span class="glyphicon glyphicon-star-empty"></span>
-											<span class="glyphicon glyphicon-star-empty"></span>
-											<span class="glyphicon glyphicon-star-empty"></span>
+										<span data-rate="${t.value.s_rate}" class="starRating">
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
+											<span><img src="resources/images/star-empty.svg" class="star"></span>
 										</span>
 										<span class="ratingValue">
-											<fmt:formatNumber value="${s.s_rate}" pattern=".0"/></span>
+											<fmt:formatNumber value="${t.value.s_rate}" pattern=".0"/></span>
 									</div>
 								</div>
 							</div>
@@ -136,18 +140,14 @@
 
 
 <script type="text/javascript">
-$('#myTab a').click(function (e) {
-	e.preventDefault()
-	$(this).tab('show')
-})
-
-// 별점 : 미완성
-var storeRate = $('.storeRate');
-
-storeRate.each(function(){
-	var star = $(this).attr('data-rate');
-	console.log(star);
-	$(this).find('span:nth-child(-n+' + star + ')').css({color:'#F2B950'});
+$(function(){
+	var starRating = $('.starRating');
+	
+	starRating.each(function(){
+		var targetScore = $(this).attr('data-rate');
+		console.log(targetScore);
+		$(this).find('svg:nth-child(-n+' + targetScore + ')').css({color:'#F2B950;'})
+	});
 });
 </script>
 

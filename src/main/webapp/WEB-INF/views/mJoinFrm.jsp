@@ -34,7 +34,7 @@
 				<form action="mJoinProc" method="post" onsubmit="return scanform()">
 
 					<div class="form-group row">
-						<label for="#" class="col-sm-2 col-form-label">아이디</label>
+						<label for="#" class="col-sm-2 col-form-label">*아이디</label>
 						<div class="col-sm-7">
 							<input type="text" name="m_id" class="form-control" placeholder="id입력" id="checkid"
 								onclick="resetid()" onfocus="this.value=''" required
@@ -52,7 +52,7 @@
 					</div>
 
 					<div class="form-group row">
-						<label for="inputPassword3" class="col-sm-2 col-form-label">비밀번호</label>
+						<label for="inputPassword3" class="col-sm-2 col-form-label">*비밀번호</label>
 						<div class="col-sm-7">
 							<input type="password" name="m_pwd" class="form-control" id="password1" placeholder="비밀번호"
 								required
@@ -62,7 +62,7 @@
 					</div>
 
 					<div class="form-group row">
-						<label for="passdoublecheck" class="col-sm-2 col-form-label">비밀번호 확인</label>
+						<label for="passdoublecheck" class="col-sm-2 col-form-label">*비밀번호 확인</label>
 						<div class="col-sm-7">
 							<input type="password" class="form-control" id="password2" onclick="needprepwd()"
 								placeholder="비밀번호 확인" required
@@ -75,7 +75,7 @@
 					</div>
 
 					<div class="form-group row">
-						<label for="inputEmail3" class="col-sm-2 col-form-label">이메일</label>
+						<label for="inputEmail3" class="col-sm-2 col-form-label">*이메일</label>
 						<div class="col-sm-7">
 							<input type="email" name="m_email" class="form-control" id="emailaddr"
 								placeholder="ex) stepy@naver.com" required
@@ -94,7 +94,7 @@
 					</div>
 
 					<div class="form-group row">
-						<label for="passdoublecheck" class="col-sm-2 col-form-label">이메일 인증번호</label>
+						<label for="passdoublecheck" class="col-sm-2 col-form-label">*이메일 인증번호</label>
 						<div class="col-sm-7">
 							<input type="text" class="form-control" id="emailauth" placeholder="이메일 인증번호 입력" required>
 						</div>
@@ -106,31 +106,40 @@
 
 
 					<div class="form-group row">
-						<label for="name" class="col-sm-2 col-form-label">성명</label>
+						<label for="name" class="col-sm-2 col-form-label">*성명</label>
 						<div class="col-sm-7">
 							<input type="text" name="m_name" class="form-control" id="name" placeholder="ex)홍길동" required>
 						</div>
 					</div>
 
 					<div class="form-group row">
-						<label for="nickname" class="col-sm-2 col-form-label">닉네임</label>
+						<label for="nickname" class="col-sm-2 col-form-label">*닉네임</label>
 						<div class="col-sm-7">
 							<input type="text" name="m_nickname" class="form-control" id="nickname" required>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<label for="mobilephone" class="col-sm-2 col-form-label">*연락처</label>
+							<div class="col-sm-7">
+								<input type="tel" name="m_phone" class="form-control" id="mobilephone"
+								placeholder="여백없이 번호 11자리 입력 " minlength="11" maxlength="11" required
+							>
 						</div>
 					</div>
 					
 					<fieldset class="form-group">
 						<div class="row">
 							<div class="col-sm-2 col-form-label">
-								<b>성별</b>
+								<b>*성별</b>
 							</div>
 							<div class="col-sm-7 requirecheck">
 								<div class="form-check">
-									<input class="form-check-input" type="checkbox" name="m_gender" id="gender_wm" value="여성">
+									<input class="form-check-input" type="radio" name="m_gender" id="gender_wm" value="여성">
 									<label class="form-check-label" for="gender_wm"> 여성 </label>
 								</div>
 								<div class="form-check">
-									<input class="form-check-input" type="checkbox" name="m_gender" id="gender_m" value="남성">
+									<input class="form-check-input" type="radio" name="m_gender" id="gender_m" value="남성">
 									<label class="form-check-label" for="gender_m"> 남성 </label>
 								</div>
 							</div>
@@ -142,15 +151,6 @@
 						<i>선택사항</i>
 					</h4>
 					<br>
-
-					<div class="form-group row">
-						<label for="mobilephone" class="col-sm-2 col-form-label">연락처</label>
-						<div class="col-sm-7">
-							<input type="tel" name="m_phone" class="form-control" id="mobilephone"
-								placeholder="여백없이 번호 11자리 입력 " minlength="11" maxlength="11"
-							>
-						</div>
-					</div>
 
 					<div class="form-group row">
 						<label for="birth" class="col-sm-2 col-form-label">생일</label>
@@ -203,10 +203,11 @@
 		var fixpwd = $("#fixpwd").val();
 		var fixemail = $("#fixemail").val();
 		var wm = $("#gender_wm");
+		var m = $('#gender_m');
 		var tf1 = wm.prop('checked');
 		
 		var m = $("#gender_m");
-		var tf2 = wm.prop('checked');
+		var tf2 = m.prop('checked');
 		
 		if (fixid == 0) {
 			alert("아이디 중복확인 필요");
@@ -264,17 +265,21 @@
 				success : function(redata) {
 					$("#sentmail").css("display", "block");
 					$("#sentmail").css("color", "green");
-					$("#sentmail").text(redata.msg);
-					authkey = redata.authkey;
+					
+					if(redata.msg.includes('success')){
+						$("#sentmail").text("인증번호를 입력해주세요!");
+						authkey = redata.authkey;
+					}
+					
 				},
 				error : function(error) {
 					alert(error);
 				}
 			});
 		}
-
 	}
 
+	
 	function confirmpass() {
 
 		var pass = $("#password1").val();
@@ -318,11 +323,9 @@
 			$("#checkid").focus();
 			return;
 		}
-
 		var object = {
 			"tempid" : enteredId
 		};
-		console.log(object);
 
 		$.ajax({
 			url : "mIdDuplicationCheck",
@@ -341,7 +344,6 @@
 					$("#idMsg").text("사용가능한 아이디 입니다.");
 					$("#fixid").val(1);
 				}
-
 			},
 			error : function(rtdata) {
 				alert("error occured");

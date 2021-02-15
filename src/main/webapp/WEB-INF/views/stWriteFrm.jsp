@@ -81,15 +81,15 @@ label {
     		<label for="inputAddress" class="form-label">특징</label>
     		<textarea class="form-control" rows="3" name="pl_text" placeholder="500자 이내"></textarea>
   		</div>
-  		<div class="col-12">	  		
-  			<label for="file" class="nomar">상품 사진 업로드<span class="must"> *필수</span></label>
+  		<div class="col-12">
+  			<label for="inputAddress" class="nomar">상품 사진 업로드<span class="must"> *필수</span></label>
   			<h6 class="text-left">
   				상품의 특징을 잘 보여줄 수 있는 대표사진을 1장 선택해주세요:)	
-  			</h6>			  					
+  			</h6>		  					
   			<input type="file" name="files" id="file" required accept="image/jpeg, image/jpg, image/png">
   			<input class="hidden upload-name" readonly>
   			<input type="hidden" id="filecheck" value="0" name="fileCheck">  			
-		</div>
+		</div>	
 			<div class="col-12 btn-mt">
    				<button type="submit" class="btn">상품 등록하기</button><br>
    				<button type="button" class="btn btn-color" onclick="location.href='./stMyProd'">돌아가기</button>

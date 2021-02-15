@@ -47,11 +47,20 @@ public class StoreController {
 	}
 	
 	@GetMapping("stResList")
-	public String stResList() {
+	public ModelAndView stResList() {
 		log.info("stResList()");
-		return "stResList";
+		mv = stServ.stResList();
+		return mv;
+	}	
+
+	@GetMapping("stShowInfo")
+	public ModelAndView stShowInfo(int res_num) {
+		log.info("stShowInfo()");
+		mv = stServ.getResInfo(res_num);
+		return mv;
 	}
 	
+	/*
 	@GetMapping("stReviewList")
 	public String stReviewList() {
 		log.info("stReviewList()");
@@ -63,6 +72,7 @@ public class StoreController {
 		log.info("stReportList()");
 		return "stReportList";
 	}
+	*/
 	
 	@GetMapping(value="stIdCheck", produces="application/text; charset=utf-8")
 	@ResponseBody
@@ -293,13 +303,21 @@ public class StoreController {
 		String view = stServ.stAuthorized(c_num, key);
 		return view;
 	}
-
+	
 	@PostMapping(value = "stAuthMail", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public void stAuthMail(String c_email, String c_num, HttpServletRequest request) throws Exception {	
 		stServ.stAuthMail(c_email, c_num);
 	}	
 	
+	@PostMapping(value = "stDelPhotos", produces = "application/text; charset=utf-8")
+	@ResponseBody
+	public String stDeletePhotos(String c_num) {
+		log.info("stDeletePhotos()");
+		String result = null;
+		result = stServ.stDeletePhotos(c_num);	
+		return result;
+	}
 
 
 }//class end

@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
     
 <div class="jumbotron" style="background-color: white; margin-bottom: 0; height:150px; padding: 20px 0;">
   <img src="resources/images/logo_tp_final01.png" onclick="gohome();"
@@ -27,6 +26,11 @@
     </div><!-- /.navbar-collapse -->
   </div><!-- /.containe -->
 </nav>
+<style>
+body::-webkit-scrollbar { 
+    display: none; 
+}
+</style>
 
 <script>
 function gohome(){

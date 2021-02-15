@@ -20,7 +20,7 @@
 	<header>
 		<jsp:include page="header.jsp" />
 	</header>
-	<main class="container" style="margin-top: 100px;">
+	<main class="container" style="margin-top: 100px; margin-bottom:200px;">
 
 
 		<div class="list-group col-sm-3">
@@ -29,17 +29,17 @@
 
 				<a href="#" class="list-group-item list-group-item-action"
 					style="color: #4375d9; border: none;"
-				> <h3><b>My Page</b></h3> </a> <a href="./mMyTravleSchedule" class="list-group-item list-group-item-action">나의
+				> <h3><b>My Page</b></h3> </a> <a href="./pPlanList?id=${member.m_id}" class="list-group-item list-group-item-action">나의
 					여행 플랜</a> <a href="./mMyLikedPages" class="list-group-item list-group-item-action">좋아요 한
 					게시글</a> <a href="./mMyCartPages" class="list-group-item list-group-item-action">찜한 상품</a> <a
-					href="#" class="list-group-item list-group-item-action"
+					href="./mMyPayment" class="list-group-item list-group-item-action"
 				>내 결제 내역/쿠폰 확인</a> <a href="./mModifyMyinfo" class="list-group-item list-group-item-action">내
 					정보 수정</a>
 					
 					<div>
 				<a href="./mMyLittleBlog?blog_id=${member.m_id }" class="list-group-item list-group-item-action" 
 				style=" background-image:linear-gradient(to bottom right, rgba(67,117,217,1),rgba(67,117,217,0.5));
-				color:white;"><b>나의 게시글</b></a>
+				color:white;"><b>미니 블로그</b></a>
 			</div>
 
 			</div>

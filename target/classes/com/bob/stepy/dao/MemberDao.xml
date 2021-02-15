@@ -47,6 +47,18 @@
 		SELECT * FROM F WHERE F_MNUM = #{userid}
 	</select>
 
+	<update id="mModifyUserInfo"
+		parameterType="com.bob.stepy.dto.MemberDto">
+		UPDATE M
+		<set>
+			<if test='m_nickname != ""'>M_NICKNAME = #{m_nickname},</if>
+			<if test='m_phone != ""'>M_PHONE = #{m_phone},</if>
+			<if test='m_birth != ""'>M_BIRTH = #{m_birth},</if>
+			<if test='m_addr != ""'>M_ADDR = #{m_addr}</if>
+		</set>
+		WHERE M_ID = #{m_id}
+	</update>
+
 	<select id="mGetBfMsg" parameterType="String"
 		resultType="com.bob.stepy.dto.MessageDto">
 	<![CDATA[
@@ -61,31 +73,169 @@
 		#{ms_contents}, DEFAULT, #{ms_bfread}, #{ms_afread})
 	</insert>
 
-	<select id="mGetSendList" parameterType="String"
+	<select id="mGetSendList"
 		resultType="com.bob.stepy.dto.MessageDto">
-		SELECT * FROM (SELECT MS.MS_NUM, MS.MS_MID, MS.MS_SMID,
-		MS.MS_CONTENTS, MS.MS_DATE,
-		MS.MS_BFREAD, MS.MS_AFREAD,
-		MEMBER.M_NICKNAME
-		FROM MS
-		INNER JOIN MEMBER ON MS_MID = MEMBER.M_ID
-		WHERE MS.MS_SMID = #{ms_smid}
-		ORDER BY MS.MS_NUM DESC)
+		<![CDATA[
+		SELECT * FROM (
+        SELECT MS.*, MEMBER.M_NICKNAME, 
+        ROW_NUMBER() OVER (ORDER BY MS.MS_NUM DESC) AS UR
+        FROM MS
+        INNER JOIN MEMBER ON MS_MID = MEMBER.M_ID
+        WHERE MS.MS_SMID=#{smid}
+        ) MS
+        WHERE UR >= #{page}*5-4 AND UR<= #{page}*5
+		]]>
 	</select>
 
-	<select id="mGetReceiveList" parameterType="String"
+	<select id="mGetReceiveList"
 		resultType="com.bob.stepy.dto.MessageDto">
-		SELECT * FROM (SELECT MS.MS_NUM, MS.MS_MID, MS.MS_SMID,MS.MS_CONTENTS, MS.MS_DATE,
-		MS.MS_BFREAD, MS.MS_AFREAD,
-		MEMBER.M_NICKNAME
-		FROM MS INNER JOIN MEMBER ON MS_SMID = MEMBER.M_ID
-		WHERE MS.MS_MID = #{hostid}
-		ORDER BY MS.MS_NUM DESC)
+		<![CDATA[
+		SELECT * FROM (
+        SELECT MS.*, MEMBER.M_NICKNAME, 
+        ROW_NUMBER() OVER (ORDER BY MS.MS_NUM DESC) AS UR
+        FROM MS
+        INNER JOIN MEMBER ON MS_SMID = MEMBER.M_ID
+        WHERE MS.MS_MID=#{mid}
+        ) MS
+        WHERE UR >= #{page}*5-4 AND UR<= #{page}*5
+		]]>
 	</select>
 
-	<update id="mUploadAfterView" parameterType="com.bob.stepy.dto.MessageDto">
+	<select id="mCountReceivedMsg" parameterType="String"
+		resultType="int">
+		SELECT COUNT(*) FROM MS WHERE MS_MID = #{hostid}
+	</select>
+
+	<select id="mCountSendMsg" parameterType="String"
+		resultType="int">
+		SELECT COUNT(*) FROM MS WHERE MS_SMID = #{hostid}
+	</select>
+
+	<update id="mUploadAfterView"
+		parameterType="com.bob.stepy.dto.MessageDto">
 		UPDATE MESSAGE
 		SET MS_AFREAD = #{ms_bfread}
-		WHERE MS_MID = #{ms_mid}
+		WHERE MS_MID =
+		#{ms_mid}
+	</update>
+
+	<select id="mRetrieveByContents"
+		parameterType="com.bob.stepy.dto.MessageDto"
+		resultType="com.bob.stepy.dto.MessageDto">
+		SELECT * FROM
+		(SELECT MS.MS_MID, MS.MS_SMID, MS.MS_CONTENTS,
+		MS.MS_DATE, MEMBER.M_NICKNAME
+		FROM MS
+		INNER JOIN MEMBER ON MS_SMID =
+		MEMBER.M_ID
+		WHERE MS.MS_MID = #{ms_mid} AND MS_CONTENTS LIKE
+		'%'||#{ms_contents}||'%'
+		ORDER BY MS.MS_NUM DESC)
+	</select>
+
+	<select id="mRetrieveByUsername"
+		parameterType="com.bob.stepy.dto.MessageDto"
+		resultType="com.bob.stepy.dto.MessageDto">
+		SELECT * FROM
+		(SELECT MS.MS_MID, MS.MS_SMID, MS.MS_CONTENTS,
+		MS.MS_DATE,
+		MEMBER.M_NICKNAME
+		FROM MS
+		INNER JOIN MEMBER ON MS_SMID =
+		MEMBER.M_ID
+		WHERE MS.MS_SMID LIKE '%'||#{ms_smid}||'%' AND MS.MS_MID =
+		#{ms_mid}
+		ORDER BY MS.MS_NUM
+		DESC)
+	</select>
+	<update id="mUpdatePwd">
+		UPDATE M SET M_PWD = #{m_pwd} WHERE M_ID = #{m_id}
+	</update>
+
+	<select id="mMyCartItems" parameterType="String"
+		resultType="com.bob.stepy.dto.FileUpDto">
+		SELECT F.F_ORINAME, F.F_SYSNAME, F.F_CNUM, F.F_THUMB,
+		S.S_NAME
+		FROM IC
+		INNER JOIN F ON F.F_CNUM = IC.IC_CNUM
+		INNER JOIN S ON
+		S.S_NUM = F.F_CNUM
+		WHERE F.F_THUMB = 'THUMB' AND IC.IC_MID = #{m_id}
+		ORDER BY ROWNUM DESC
+	</select>
+
+	<select id="mGetLikedPost"
+		resultType="com.bob.stepy.dto.PostDto">
+		<![CDATA[
+		SELECT * FROM (SELECT P.P_NUM, P.P_TITLE, P.P_CONTENTS, P.P_CATEGORY, P.P_DATE, P.P_VIEW, P.P_LIKE, P.P_MID 
+		FROM P
+		INNER JOIN L ON P.P_NUM = L.L_PNUM 
+		WHERE L.L_MID = #{mid} ORDER BY L.L_NUM DESC)
+		WHERE ROWNUM >= #{page}*10-9 AND ROWNUM <= #{page}*10
+		]]>
+	</select>
+
+	<select id="mGetWholeLiked" parameterType="String"
+		resultType="int">
+		SELECT COUNT(*) FROM L WHERE L_MID = #{userid}
+	</select>
+
+	<select id="mGetMyPostList" parameterType="String"
+		resultType="com.bob.stepy.dto.MemberPostDto">
+		SELECT * FROM (
+		SELECT * FROM P
+		FULL OUTER JOIN CON ON
+		P.P_NUM = CON.CON_PNUM
+		WHERE P.P_MID = #{m_id})
+		ORDER BY P_NUM DESC
+	</select>
+
+	<select id="mGetMyReplyList" parameterType="String"
+		resultType="com.bob.stepy.dto.MemberPostDto">
+		SELECT * FROM (
+		SELECT DISTINCT P.*, CON.*, R.* FROM P
+		FULL
+		OUTER JOIN(
+		SELECT DISTINCT CON.CON_PNUM, CON.CON_ORINAME,
+		CON.CON_SYSNAME
+		FROM CON) CON
+		ON P.P_NUM = CON.CON_PNUM
+		INNER JOIN (
+		SELECT DISTINCT R_NUM, R_ID, R_PNUM FROM R) R
+		ON P.P_NUM = R.R_PNUM
+		WHERE R.R_ID = #{m_id})
+		ORDER BY R_NUM DESC
+	</select>
+
+	<select id="mGetPayPendingList" parameterType="String"
+		resultType="com.bob.stepy.dto.MemberPaymentDto">
+		SELECT * FROM
+		(SELECT RES.*, PL.*, S.S_NAME, F.F_SYSNAME FROM RES
+		FULL
+		OUTER JOIN PL ON RES_PLNUM =
+		PL_NUM
+		INNER JOIN S ON PL_CNUM = S_NUM
+		INNER JOIN F ON PL_NUM = F_PLNUM
+		WHERE RES_MID=#{m_id} AND
+		RES_STATUS = 0)
+		ORDER BY RES_NUM DESC
+	</select>
+
+	<select id="mGetPaidList" parameterType="String"
+		resultType="com.bob.stepy.dto.MemberPaymentDto">
+		SELECT * FROM
+		(SELECT RES.*, PL.*, S.S_NAME, F.F_SYSNAME FROM RES
+		FULL
+		OUTER JOIN PL ON RES_PLNUM =
+		PL_NUM
+		INNER JOIN S ON PL_CNUM = S_NUM
+		INNER JOIN F ON PL_NUM = F_PLNUM
+		WHERE RES_MID=#{m_id} AND
+		RES_STATUS = 1)
+		ORDER BY RES_NUM DESC
+	</select>
+
+	<update id="mUpdateToPaidStatement" parameterType="Integer">
+		UPDATE RES SET RES_STATUS = 1 WHERE RES_NUM = #{resnum}
 	</update>
 </mapper>

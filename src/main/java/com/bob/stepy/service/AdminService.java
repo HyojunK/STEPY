@@ -2,11 +2,15 @@ package com.bob.stepy.service;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.*;
+
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
 import javax.mail.*;
 import javax.mail.internet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -33,13 +37,14 @@ public class AdminService {
 	@Autowired
 	private AdminDao aDao;
 
-	//특정 데이터들이 담길 모델뷰
+	//특정 데이터들이 담길 모델뷰 (와이어드없이 각 기능마다 new로 빈공간으로 사용)
 	private ModelAndView mv;
 
 	//세션 객체+와이어드
 	@Autowired
 	private HttpSession session;
 
+	//어드민 로그인 처리
 	public String loginProc(MemberDto member, RedirectAttributes rttr) {
 		//목적지가 담길 String view
 		String view =null;
@@ -58,7 +63,7 @@ public class AdminService {
 
 			if (pw.equals(member.getM_pwd())) {
 
-				//단, 어드민 전용 로그인이므로 가져온 id가 미리 등록한 실제 어드민 ID와 같아야 진행
+				//단, 어드민 전용 로그인이므로 가져온(입력한) id까지 미리 등록한 (DB)실제 어드민 ID와 같아야 진행
 				if(id.equals("admin")) {
 					member = aDao.getMemberInfo(member.getM_id());
 
@@ -66,15 +71,13 @@ public class AdminService {
 					session.setAttribute("member", member);
 					view = "aHome";
 				}
-				//id가 admin이 아닌 경우 어드민이 아니라고 판단, 권한 없음 경고
-				else {
+				else {//id가 admin이 아닌 경우 어드민이 아니라고 판단, 권한 없음 경고
 					view = "redirect:aLoginFrm";
 					rttr.addFlashAttribute("msg", "접속 권한이 없습니다");
 				}
 			}//ID도 PW도 맞는 경우의 if 끝
 
-			else {
-				//ID는 맞았으나 비밀번호를 틀린 경우
+			else {//ID는 맞았으나 비밀번호를 틀린 경우
 				//로그인 페이지로 돌아감, 보여줄 메시지를 리다이렉트의 플래시 어트리뷰트에 등록
 				view ="redirect:aLoginFrm";
 
@@ -90,9 +93,6 @@ public class AdminService {
 			view ="redirect:aLoginFrm";
 			rttr.addFlashAttribute("msg", "아이디 또는 비밀번호가 틀렸습니다");
 		}
-		//'list'를 받는 대상은 페이지가 아닌
-		//보드 컨트롤의 list맵핑 메소드가 받아
-		//컨트롤러-컨트롤러 연계 처리도 가능함	
 		return view;
 	}//어드민 전용 로그인 Proc 끝
 
@@ -336,15 +336,13 @@ public class AdminService {
 			mv.setViewName("aSuggestList");
 			break;
 		}//스위치 끝
-
-
 		//스위치가 결정하고 데이터를 담아온 mv를 리턴해 각 스위치별 페이지로 이동
 		//모델에 담긴 리스트를 꺼내는건 각 페이지에서 EL로 처리함
 		return mv;
 	}//셀렉트 스위치 메소드 끝
 
 	//승인 요청 수락하기 UPATE 메소드
-	//DB를 고치는 작업이므로 트랜젝셔널 처리 추가
+	//DB를 고치는 작업은 트랜젝셔널 처리 별도 추가
 	@Transactional
 	public String aPertmitStore(String c_num) {
 		//결과는 해당 리스트 페이지에서 볼 수 있으므로 결과 메시지 생략
@@ -393,19 +391,12 @@ public class AdminService {
 		return view;
 	}
 
-	//메일 전송 처리
-	public void sendMail(EmailDto email) {
-		List<String> eMails = aDao.getMailList_M();
-		for (int i=0; i<eMails.size(); i++) {
-			System.out.println(eMails.get(i));			
-		}
-
-	}
-
 	public String mailSend
-	(EmailDto email, int mailType)
-			throws AddressException, MessagingException {
+	(EmailDto email, int mailType, RedirectAttributes rttr, MultipartHttpServletRequest multi)
+			throws Exception {
 		String resStr = "";
+		String view = null;
+		String check = multi.getParameter("fileCheck");
 		List<String> mailList = new ArrayList<String>();
 		System.out.println("mailSend");
 
@@ -422,12 +413,15 @@ public class AdminService {
 			switch(mailType) {
 			case 1://M테이블 전원
 				mailList = aDao.getMailList_M();
+				view = "redirect:aGroupMailFrm";
 				break;
 			case 2://C테이블 전원
 				mailList = aDao.getMailList_C();
+				view = "redirect:aGroupMailFrm";
 				break;
 			case 3://특정 단일 대상 (emailDTO에 기록된 수신자 가져와서 add)
 				mailList.add(email.getReceiveMail());
+				view = "redirect:aReport";
 				break;
 			}
 			System.out.println("DAO에서 이메일 리스트 가져오기 완료");
@@ -472,7 +466,47 @@ public class AdminService {
 			// 메일 콘텐츠 설정
 			Multipart mParts = new MimeMultipart();
 			MimeBodyPart mTextPart = new MimeBodyPart();
-			MimeBodyPart mFilePart = null;
+			MimeBodyPart mFilePart = new MimeBodyPart();
+
+			//check가 1, 첨부파일이 있는 경우에만 실행되는 블럭 (첨부가 없으면 생략)
+			if(check.equals("1")) {
+				System.out.println("첨부파일 있음");
+				String path = multi.getSession().getServletContext().getRealPath("/");
+				path += "resources/upload/";
+				System.out.println("현재 경로 path : "+path);
+
+				List<MultipartFile> fList = multi.getFiles("files");
+
+				for (int i =0; i< fList.size(); i++) {
+					mFilePart = new MimeBodyPart();
+
+					//첨부파일이 1개여도 n개여도 0~n-1까지 전부 처리하게 작성
+					MultipartFile mf = fList.get(i);
+
+					//mf에 들어간 데이터에서 파일의 오리지널네임, 원래 이름을 가져옴 (가명 'on'으로 사용)
+					String on = mf.getOriginalFilename();
+					//System.out.println(on);
+					//변경된 파일 이름을 맵에 저장
+					//sn의 값을 정하는 '순간의 밀리초'+'.확장자'를 모두 합쳐 sn의 시스템 파일명이 결정됨
+					//단, 확장자를 찾기 위해서는 서브스트링(".")으로 .과 이후의 문자열(확장자 포함)만 가져옴
+					String sn = System.currentTimeMillis()+on.substring(on.lastIndexOf("."));
+					String fullPath = path+sn;
+
+					//경로+파일명을 합친 전체 경로&파일명을 file의 new에 등록, '파일'로서 이식시킴
+					File file = new File(fullPath);
+
+					//해당 폴더에 파일 저장하기 (attachFile을 할 때 실제로 해당 위치에 파일이 있어야 하기 때문에 저장 필요)
+					//path 경로에 sn 파일명으로 된 파일을 저장하는 메소드
+					//transferTo
+					mf.transferTo(file);
+
+					//마임파트에 파일 기억시킴 (단, 실제로 file의 경로에 파일이 존재하고 있어야 함)
+					mFilePart.attachFile(file);
+
+					//같은 이름을 사용해도 내용이 다르면 add할 때마다 신규 add
+					mParts.addBodyPart(mFilePart);
+				}
+			}
 
 			//MimeMessage 생성 - 메일의 각각의 요소를 기억
 			Message mimeMessage = new MimeMessage(session);
@@ -486,11 +520,14 @@ public class AdminService {
 			//제목 세팅
 			mimeMessage.setSubject(subject);
 
-			//멀티파트도 내용으로 기억가능, 멀티파트 mParts에 몰아 담기
+			//내용 세팅
 			mTextPart.setText(content);
+
+			//멀티파트도 내용으로 기억가능, 멀티파트 mParts에 몰아 담기
 			mParts.addBodyPart(mTextPart);
 
-			mimeMessage.setContent(mParts); //내용 세팅
+
+			mimeMessage.setContent(mParts); //add가 쌓인 mParts를 세팅
 
 			//mimeMessage.setFileName();//첨부파일명으로 쓰일 이름 세팅
 
@@ -502,7 +539,9 @@ public class AdminService {
 		} catch (AddressException e) {
 			resStr = "메일 발송에 실패했습니다";
 		}
-		return resStr;
+		rttr.addFlashAttribute("msg",resStr);
+
+		return view;
 	}//메일 발송 메소드 끝
 
 	//이벤트 신규 등록
@@ -512,7 +551,6 @@ public class AdminService {
 		System.out.println("서비스 클래스 진입");
 		String view = null;
 		String resStr = null;
-
 
 		//form으로 작성한 내용들 꺼내기
 		//멀티리퀘스트도 일종의 리퀘스트이므로 겟파라미터(NAME)으로 꺼낼 수 있음
@@ -778,7 +816,7 @@ public class AdminService {
 			//데이터들을 담은 DTO째로 파라미터해 INSERT
 			aDao.updateEvent(event);
 
-			//check가 1인 상황, 파일이 있는 경우메나 파일 INSERT 처리
+			//check가 1인 상황, 파일이 있는 경우에만 파일 INSERT 처리
 			//파일 업로드 메소드 호출해 처리
 			if (check.equals("1")) {
 				try {

@@ -5,17 +5,13 @@
 	font-size: 24px;
 	text-align: center;
 	font-weight: bolder;
-	cursor: default;
+	cursor: pointer;
 }
 
 .sidebar {
 	padding: 0;
 	border-right: 3px solid #4375d9;
 	border-collapse: collapse;
-}
-
-.active {
-	
 }
 
 @media screen and (max-width: 768px) {

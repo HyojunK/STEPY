@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
 <link href="resources/css/style.css" rel="stylesheet">
 
-<!-- 캘린더 -->
+<!-- datepicker -->
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
@@ -59,6 +59,11 @@
 .VAT {
 	font-size: 16px;
 }
+.glyphicon-chevron-down {
+	color: black;
+	background: #808080;
+	border-style: none;
+}
 .price {
 	font-size: 25px;
 	font-weight: bold;
@@ -66,14 +71,14 @@
 	margin-top: 10px;
 }
 .reservBtn{
-	margin-top: 50px;
-	margin-left: 30px;
-	width: 30%;
+	margin-top: 10px;
+	width: 280px;
 	height: 50px;
 	font-size: 20px;
 	color: white;
 	background: #4375D9;
 	border: 1px solid #4375D9;
+	border-radius: 5px;
 }
 </style>
 </head>
@@ -98,12 +103,14 @@
 					<input class="form-control input-lg infoInput" type="text" id="formGroupInputLarge"
 						placeholder="안심번호로 변경되어 숙소에 전달됩니다." required="required" name="res_phone">
 				</div>
+				<input type="hidden" name="res_mid" value="${member.m_id}">
+				<input type="hidden" name="res_plnum" value="${product.pl_num}">
 				<hr>
 				
 				<div class="VAT">
 					<div>
 						<span class="glyphicon glyphicon-ok"></span>
-						<span>결제까지 완료해야 체크인하실 수 있습니다.</span>
+						<span>결제까지 완료되어야 체크인하실 수 있습니다.</span>
 					</div>
 					<div>예약 후 반드시 결제해주세요!</div>
 				</div>
@@ -113,26 +120,26 @@
 			<div>
 				<div  class="reservInfo">
 					<div>
-						<input type="hidden" name="pl_num" value="${product.pl_num}">
 						<div class="title">숙소 이름</div> <div class="contents">${store.s_name}</div>
 					</div>
 					<div>
 						<div class="title">객실 타입</div> <div class="contents">${product.pl_name}</div>
 					</div>
 					<div>
-						<div class="title">체크인</div>
+						<div class="title">체크인 (15:00)</div>
 						<div class="form-group calendar">
-							<input type="date" id="checkinDate" class="form-control" 
-								required="required" name="res_checkindate">
+							<input type="text" id="checkinDate" class="form-control" 
+								required="required" name="res_checkindate" placeholder="체크인 날짜">
 						</div>
 					</div>
 					<div>
-						<div class="title">체크아웃</div>
+						<div class="title">체크아웃 (11:00)</div>
 						<div class="form-group calendar">
-							<input type="date" id="checkoutDate" class="form-control" 
-								required="required" name="res_checkoutdate">
+							<input type="text" id="checkoutDate" class="form-control" 
+								required="required" name="res_checkoutdate" placeholder="체크아웃 날짜">
 						</div>
 					</div>
+					<!-- 
 					<hr>
 					
 					<div>
@@ -140,13 +147,14 @@
 							<span class="bigTitle">총 결제 금액</span> <span class="VAT">(VAT 포함)</span>
 						</div>
 						<div class="price">
-							<fmt:formatNumber type="number" maxFractionDigits="3" value="${product.pl_price}"/>원
+							<fmt:formatNumber type="number" maxFractionDigits="3" 
+								value="${product.pl_price}"/>원
 						</div>
+					</div> -->
+					
+					<div>
+						<input type="submit" class="reservBtn" value="예약하기">
 					</div>
-				</div>
-				
-				<div>
-					<button type="submit" class="reservBtn">예약하기</button>
 				</div>
 			</div> <!-- 숙소 정보 -->
 		</form>
@@ -159,14 +167,13 @@
 </body>
 
 <script type="text/javascript">
-/*
 $(function() {
 	// 달력
 	$("#checkinDate").datepicker({
     	nextText: "다음 달", // > 화살표 툴팁
     	prevText: "이전 달", // < 화살표 툴팁
     	
-    	dateFormat: "yy.mm.dd", // 날짜 표기 방식
+    	dateFormat: "yy-mm-dd", // 날짜 표기 방식
     	minDate: 0, // 오늘 이전 날짜 선택 불가
     	
     	onClose: function( selectedDate ) {    
@@ -180,7 +187,7 @@ $(function() {
     	nextText: "다음 달", // > 화살표 툴팁
     	prevText: "이전 달", // < 화살표 툴팁
     	
-    	dateFormat: "yy.mm.dd", // 날짜 표기 방식
+    	dateFormat: "yy-mm-dd", // 날짜 표기 방식
     	minDate: 0, // 오늘 이전 날짜 선택 불가
     	
     	onClose: function( selectedDate ) {
@@ -189,8 +196,7 @@ $(function() {
             $("#checkinDate").datepicker("option", "maxDate", selectedDate);
         }
     });
- 
-});*/
+});
 </script>
 
 </html>

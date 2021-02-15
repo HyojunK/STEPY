@@ -19,7 +19,7 @@
 		var chk = "${msg}";
 		if (chk != "") {
 			alert(chk);
-			location.reload(true);
+			//location.reload(true);
 		}
 	});
 </script>

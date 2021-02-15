@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 
@@ -117,7 +116,7 @@ ul {
 						</c:forEach>
 					</ul>			
 					<div class="col-12">
-   						<button type="button" class="btn" onclick="del('${stThumb.f_sysname}')">등록한 사진 삭제하기</button>
+   						<button type="button" class="btn" onclick="delPhotos('${ceo.c_num}');">등록한 사진 삭제하기</button>
    					</div>
    					<div class="col-12">
    						<button type="button" class="btn btn-color" onclick="location.href='./stMyPage'">돌아가기</button>
@@ -132,6 +131,34 @@ ul {
 	</footer>
 
 </body>
+<script type="text/javascript">
+function delPhotos(cnum) {
+	var con = confirm("스토어 사진을 삭제하시겠습니까?");
+	var cnumObj = {"c_num" : cnum};
+	console.log(cnumObj);
+	
+	if(con){
+		$.ajax({
+			url: "stDelPhotos",
+			type: "post",
+			data: cnumObj,
+			dataType: "text",
+			success: function(data){
+				if(data == "success"){
+					alert("삭제되었습니다.");
+					location.reload(true);
+				} else {
+					alert("삭제 실패하였습니다.");					
+				}				
+			},
+			error: function(request, status, error){
+				alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+				location.reload(true);
+			}			
+		});		
+	}
+}
+</script>
 <script type="text/javascript">
 $("#file").on('change', function(){
 	var files = $("#file")[0].files;
