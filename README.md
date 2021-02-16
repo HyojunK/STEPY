@@ -894,6 +894,10 @@ STEPY는 여행을 할 때 예약을 하는 과정과, 일정을 만들고 관�
 				}
 				else {//일행이 5명 다 차있을 시
 					msg = "더 이상 참여할 수 없습니다!";
+					rttr.addFlashAttribute("msg", msg);
+				
+					return "redirect:pPlanList?id=" + id;
+
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
